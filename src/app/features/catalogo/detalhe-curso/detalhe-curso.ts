@@ -50,7 +50,6 @@ export class DetalheCursoComponent {
       this.notificacao.sucesso('Matrícula realizada');
       this.perfilAluno.recarregarMatriculas();
     } catch {
-      // o erroInterceptor já mostrou o toast com a mensagem da API
     } finally {
       this.enviando.set(false);
     }

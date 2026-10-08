@@ -8,9 +8,7 @@ function lerPreferencia(): Tema {
   try {
     const gravado = localStorage.getItem(CHAVE_TEMA);
     if (gravado === 'claro' || gravado === 'escuro') return gravado;
-  } catch {
-    /* localStorage indisponível */
-  }
+  } catch {}
   return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'escuro' : 'claro';
 }
 
@@ -27,9 +25,7 @@ export class TemaService {
       this.documento.documentElement.classList.toggle('dark', escuro);
       try {
         localStorage.setItem(CHAVE_TEMA, this.tema());
-      } catch {
-        /* localStorage indisponível */
-      }
+      } catch {}
     });
   }
 
