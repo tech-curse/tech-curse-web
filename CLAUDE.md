@@ -1,15 +1,24 @@
 # CLAUDE.md
 
-Front-end Angular da **Tech Curse** (plataforma de cursos). Consome a Tech Curse API (repositório irmão `../tech-curse`, .NET 10).
+Front-end Angular da **Tech Curse** (plataforma de cursos). Consome a Tech Curse API ([`tech-curse/tech-curse-api`](https://github.com/tech-curse/tech-curse-api), clonada como irmã em `../tech-curse-api`, .NET 10).
 
-> O projeto é documentado em **português brasileiro**: commits, docs, textos de UI e identificadores em pt-BR. Comentários em código são permitidos, mas só quando explicam um porquê não óbvio.
+> O projeto é documentado em **português brasileiro**: commits, docs, textos de UI e identificadores em pt-BR.
+
+> **Não escreva comentários. Em nenhum arquivo.** Vale para `.ts`, `.html`, `.css`, arquivos de configuração (`.editorconfig`, `eslint.config.js`, `.vscode/*.json`) e para qualquer `Dockerfile`, compose ou workflow que venha a existir. A justificativa de uma escolha vai na mensagem de commit, na descrição do PR ou neste arquivo, nunca no arquivo-fonte. Isto vale também para instruções passadas a subagentes. Documentação em arquivos `.md` segue normalmente.
+>
+> Duas exceções, ambas por não serem código escrito aqui:
+>
+> - `src/app/shared/ui/**` — gerado pelo CLI do spartan (ver "Arquitetura").
+> - `.gitignore` — template padrão do Angular CLI.
 
 ## Comandos
 
 ```bash
 npm start            # ng serve em http://localhost:4200
+npm run build        # build de produção em dist/
 npm run lint         # angular-eslint
 npm run format       # prettier (ordena classes Tailwind)
+npm run format:check # prettier sem alterar arquivos
 npx ng g @spartan-ng/cli:ui <primitivo>  # components.json define o destino (src/app/shared/ui)
 ```
 
@@ -30,8 +39,8 @@ npx ng g @spartan-ng/cli:ui <primitivo>  # components.json define o destino (src
 
 ## Fases
 
-1. Fundação — spec em `docs/superpowers/specs/2026-09-18-fundacao-angular-design.md`.
-2. Portal do aluno — matrícula, `/me`, pagamentos. Spec em `docs/superpowers/specs/2026-09-23-portal-do-aluno-design.md`.
+1. Fundação — autenticação, layout e catálogo.
+2. Portal do aluno — matrícula, `/me`, pagamentos.
 3. Painel administrativo — **não iniciado.** O plano de fases foi encerrado em 2026-10-08: o desenvolvimento de features está pausado para o deploy do estado atual em produção.
 
 Não há base de testes nem build de imagem neste repositório: os dois foram removidos em 2026-10-08 e serão refeitos.
@@ -51,4 +60,8 @@ Não há base de testes nem build de imagem neste repositório: os dois foram re
 
 ## Git
 
-Branch `main`. Conventional Commits em pt-BR (`feat:`, `fix:`, `test:`, `docs:`, `chore:`, `refactor:`, `style:`, `build:`, `ci:`). Sem linhas de atribuição de IA em commits ou PRs.
+Repositório `tech-curse/tech-curse-web`, desenvolvimento trunk-based: branch curta a partir de `main`, PR com título em Conventional Commits e **squash merge**. A `main` está sempre implantável; nada de push direto. Conventional Commits em pt-BR (`feat:`, `fix:`, `test:`, `docs:`, `chore:`, `refactor:`, `style:`, `build:`, `ci:`). Sem linhas de atribuição de IA em commits ou PRs. Mudanças notáveis entram no `CHANGELOG.md`, seção `[Não lançado]`, no mesmo PR.
+
+O `.gitattributes` fixa LF no checkout (`eol=lf`), independentemente do `core.autocrlf` da máquina. Sem isso, um clone no Windows com `autocrlf=true` recebe CRLF e o `npm run format:check` acusa todos os arquivos, porque o Prettier exige LF.
+
+O plugin `superpowers` fica habilitado para o repositório em `.claude/settings.json`; o espaço de trabalho dele (`.superpowers/`) não é versionado.
