@@ -24,9 +24,6 @@ export class PerfilAlunoService {
 
   readonly estado = computed<EstadoPerfilAluno>(() => {
     if (!this.ehAluno()) return 'inativo';
-    // hasValue() continua true durante reload (status 'reloading'); checar antes de
-    // isLoading() evita que recarregarPerfil() derrube o estado para 'carregando' e
-    // destrua o <router-outlet> em AlunoLayoutComponent.
     if (this.perfilRecurso.hasValue()) return 'ativo';
     if (this.perfilRecurso.isLoading()) return 'carregando';
     const erro = this.perfilRecurso.error();

@@ -27,15 +27,11 @@ export function lerSessao(): Sessao | null {
 export function gravarSessao(sessao: Sessao): void {
   try {
     localStorage.setItem(CHAVE_SESSAO, JSON.stringify(sessao));
-  } catch {
-    /* localStorage indisponível */
-  }
+  } catch {}
 }
 
 export function limparSessao(): void {
   try {
     localStorage.removeItem(CHAVE_SESSAO);
-  } catch {
-    /* localStorage indisponível */
-  }
+  } catch {}
 }

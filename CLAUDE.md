@@ -57,6 +57,8 @@ Não há base de testes nem build de imagem neste repositório: os dois foram re
 - Erros de `httpResource` podem chegar embrulhados (`cause`); leia com `extrairErroApi`.
 - Estado de listas (página, ordem, categoria) fica na query string e chega aos componentes como inputs (`withComponentInputBinding`).
 - Locale `pt-BR` e moeda `BRL` registrados no `app.config.ts`.
+- `PerfilAlunoService.estado` checa `hasValue()` **antes** de `isLoading()`. Durante um reload o `httpResource` fica em `'reloading'` com `hasValue()` ainda `true`; na ordem inversa, `recarregarPerfil()` derrubaria o estado para `'carregando'` e destruiria o `<router-outlet>` do `AlunoLayoutComponent`.
+- `catch` vazio é intencional em dois casos, e por isso o ESLint roda com `no-empty: allowEmptyCatch`: acesso ao `localStorage` (indisponível em navegação privada ou com storage bloqueado; sessão e tema caem no padrão) e erros HTTP de ações que o `erroInterceptor` já transformou em toast (ex.: `matricular()` no detalhe do curso).
 
 ## Git
 
