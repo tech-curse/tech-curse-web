@@ -11,6 +11,14 @@ Front-end Angular da **Tech Curse** (plataforma de cursos). Consome a Tech Curse
 > - `src/app/shared/ui/**` — gerado pelo CLI do spartan (ver "Arquitetura").
 > - `.gitignore` — template padrão do Angular CLI.
 
+## Twelve-Factor
+
+O front segue o [Twelve-Factor App](https://12factor.net/pt_br/), adaptado a uma aplicação estática; o checklist está em [`docs/twelve-factor.md`](docs/twelve-factor.md). Regras práticas:
+
+- **Um build só para todos os ambientes.** O que muda por ambiente (endereço da API, funcionalidades ligadas como pagamentos) vem do `config.json` lido em runtime, nunca de `src/environments/` nem de flag de build. Os arquivos de `src/environments/` saem na Fase 4 (`WEB-NAV-010`).
+- **Funcionalidade é ligada por configuração**, com o padrão desligado, nunca por detectar o ambiente (hostname, `isDevMode()` etc.).
+- **Nada de estado no servidor**: a sessão vive no navegador.
+
 ## Comandos
 
 ```bash
