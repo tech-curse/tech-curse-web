@@ -11,6 +11,8 @@ Front-end Angular da **Tech Curse** (plataforma de cursos). Consome a Tech Curse
 > - `src/app/shared/ui/**` — gerado pelo CLI do spartan (ver "Arquitetura").
 > - `.gitignore` — template padrão do Angular CLI.
 
+**O comportamento esperado do front está em [`docs/especificacoes/`](docs/especificacoes/README.md)**, a fonte da verdade para telas, navegação e sessão, com cenários com ID (`WEB-AUTH-011`). O contrato HTTP é o da especificação da API. Os testes derivam de lá e trazem o ID no nome. Mudou comportamento: atualize especificação, código e teste no mesmo PR. Cenário marcado **divergente** descreve o comportamento desejado, não o atual.
+
 ## Comandos
 
 ```bash
