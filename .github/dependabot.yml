@@ -13,6 +13,17 @@ updates:
     commit-message:
       prefix: chore
       include: scope
+    ignore:
+      - dependency-name: "@angular/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@angular-devkit/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "angular-eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@angular-eslint/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     groups:
       angular:
         patterns:
@@ -20,6 +31,9 @@ updates:
           - "@angular-devkit/*"
           - "angular-eslint"
           - "@angular-eslint/*"
+      ng-icons:
+        patterns:
+          - "@ng-icons/*"
       npm-menores:
         update-types: [minor, patch]
 
