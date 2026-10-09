@@ -45,8 +45,8 @@ npx ng g @spartan-ng/cli:ui <primitivo>  # components.json define o destino (src
 ## Backend
 
 - Base de desenvolvimento: `http://localhost:5130/tech-curse` (`environment.development.ts`).
-- Claims do JWT: `nameid`, `email`, `role`. Erros em `ProblemDetails`; `422` traz `errors` com **códigos do Identity** (`PasswordRequiresDigit`, `DuplicateEmail`, ...), mapeados para campos em `RegistrarComponent`.
-- `UserName` = nome informado no registro e não aceita espaços (regra padrão do Identity).
+- Claims do JWT: `nameid`, `email`, `role`. Erros em `ProblemDetails`; `422` traz `errors` com **códigos do Identity** (`PasswordRequiresDigit`, `DuplicateEmail`, ...), mapeados para campos em `RegistrarComponent` (`DuplicateEmail` e `InvalidEmail` no e-mail, `Password*` na senha, `Nome` no nome).
+- O nome do registro é livre (1 a 100 caracteres, espaços e acentos); na API, o `UserName` do Identity é o e-mail. Erro `422` do nome chega em `errors.Nome`.
 
 ## Fases
 

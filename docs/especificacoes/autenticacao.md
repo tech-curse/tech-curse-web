@@ -57,8 +57,7 @@ Deixar a pessoa criar a conta, entrar e continuar logada enquanto a sessão for 
 *Quando* a pessoa digita um nome com espaço ou acento (ex.: `"João da Silva"`)
 *Então* o formulário aceita
 *E* um nome com mais de 100 caracteres mostra `"Use no máximo 100 caracteres."`
-**Status:** divergente: correção proposta para a Fase 3, junto com o `AUTH-009` da API
-**Hoje:** o campo só aceita `A-Z a-z 0-9 - . _ @ +` e mostra `"Use apenas letras, números e os símbolos - . _ @ + (sem espaços)."`, repetindo a restrição da API.
+**Status:** implementado
 
 **WEB-AUTH-008: Erros de validação da API aparecem no campo certo**
 *Quando* a API responde `422` com códigos do Identity
@@ -69,8 +68,7 @@ Deixar a pessoa criar a conta, entrar e continuar logada enquanto a sessão for 
 **WEB-AUTH-009: O registro não envia papel**
 *Quando* o formulário de registro é enviado
 *Então* o corpo tem `name`, `email`, `password` e `confirmPassword`, e nada mais
-**Status:** divergente: correção proposta para a Fase 3
-**Hoje:** o corpo inclui `role: "Student"`. A API ignora o campo (`AUTH-002`), mas enviá-lo sugere que o front escolhe o papel.
+**Status:** implementado
 
 ### Token nas requisições e renovação
 
@@ -154,12 +152,6 @@ Deixar a pessoa criar a conta, entrar e continuar logada enquanto a sessão for 
 *Então* o refresh token não fica no `localStorage`; ele trafega só no cookie `HttpOnly` da API (`AUTH-034`)
 **Status:** planejado (Fase 5)
 
-## Divergências
-
-| Cenário | Hoje | Proposta | Quando |
-| --- | --- | --- | --- |
-| `WEB-AUTH-007` | Nome sem espaço nem acento | Nome livre, até 100 caracteres (com `AUTH-009`) | Fase 3 |
-| `WEB-AUTH-009` | Registro envia `role: "Student"` | Não enviar | Fase 3 |
 
 ## Fora de escopo
 

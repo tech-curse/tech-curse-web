@@ -33,3 +33,17 @@ test('WEB-AUTH-006: o formulário de registro mostra os erros sem chamar a API',
   await expect(page.getByText('As senhas não coincidem.')).toBeVisible();
   expect(requisicoes).toEqual([]);
 });
+
+test('WEB-AUTH-007: o nome do registro é livre, até 100 caracteres', async ({ page }) => {
+  await page.goto('/registrar');
+  const nome = page.getByLabel('Nome', { exact: true });
+
+  await nome.fill('João da Silva');
+  await nome.blur();
+  await expect(page.getByText('Use no máximo 100 caracteres.')).toHaveCount(0);
+  await expect(page.getByText(/sem espaços/)).toHaveCount(0);
+
+  await nome.fill('a'.repeat(101));
+  await nome.blur();
+  await expect(page.getByText('Use no máximo 100 caracteres.')).toBeVisible();
+});

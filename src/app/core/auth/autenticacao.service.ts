@@ -49,9 +49,8 @@ export class AutenticacaoService {
   async registrar(dados: DadosRegistro): Promise<void> {
     await firstValueFrom(
       this.http.post(`${environment.apiUrl}/Auth/register`, {
-        name: dados.nome,
+        name: dados.nome.trim(),
         email: dados.email,
-        role: 'Student',
         password: dados.senha,
         confirmPassword: dados.confirmacaoSenha,
       }),
