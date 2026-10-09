@@ -17,3 +17,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 ### Removido
 
 - Configuração `ng test` do VS Code, que chamava um script `test` inexistente.
+
+### Segurança
+
+- Angular atualizado de 22.1 para 22.2 (`ng update`): corrige o alerta alto do `@angular/router` (DoS em SSR, recurso que o projeto não usa) e o crítico do `piscina`, dependência do `@angular/build`.
+- Dependências transitivas de desenvolvimento corrigidas: `source-map-js`, `smol-toml` e `brace-expansion` atualizados; `axios` e `@modelcontextprotocol/sdk` saíram da árvore.
