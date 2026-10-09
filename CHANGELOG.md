@@ -13,6 +13,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - `.gitattributes` fixando LF no checkout, para que `npm run format:check` dê o mesmo resultado no Windows e no Linux.
 - CI no GitHub Actions em todo pull request e push na `main`: `npm ci`, lint, verificação de formatação e build de produção.
 - `.nvmrc` fixando o Node 24, usado pelo CI e pelo `nvm use`.
+- Testes unitários com Vitest (builder `@angular/build:unit-test`, jsdom) e testes end-to-end com Playwright contra o bundle de produção. Primeiros testes: sessão gravada e leitura do JWT (`WEB-AUTH-016` a `WEB-AUTH-019`), navegação sem login (`WEB-NAV-001`, `WEB-NAV-003`, `WEB-NAV-004`) e validação dos formulários (`WEB-AUTH-003`, `WEB-AUTH-006`).
+- Cobertura e relatório de rastreabilidade entre especificação e testes no resumo de cada execução do CI.
 
 ### Removido
 
