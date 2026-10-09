@@ -13,6 +13,15 @@ Front-end Angular da **Tech Curse** (plataforma de cursos). Consome a Tech Curse
 
 **O comportamento esperado do front está em [`docs/especificacoes/`](docs/especificacoes/README.md)**, a fonte da verdade para telas, navegação e sessão, com cenários com ID (`WEB-AUTH-011`). O contrato HTTP é o da especificação da API. Os testes derivam de lá e trazem o ID no nome. Mudou comportamento: atualize especificação, código e teste no mesmo PR. Cenário marcado **divergente** descreve o comportamento desejado, não o atual.
 
+## Twelve-Factor
+
+O front segue o [Twelve-Factor App](https://12factor.net/pt_br/), adaptado a uma aplicação estática; o checklist está em [`docs/twelve-factor.md`](docs/twelve-factor.md). Regras práticas:
+
+- **Um build só para todos os ambientes.** O que muda por ambiente (endereço da API, funcionalidades ligadas como pagamentos) vem do `config.json` lido em runtime, nunca de `src/environments/` nem de flag de build. Os arquivos de `src/environments/` saem na Fase 4 (`WEB-NAV-010`).
+- **Funcionalidade é ligada por configuração**, com o padrão desligado, nunca por detectar o ambiente (hostname, `isDevMode()` etc.).
+- **Nada de estado no servidor**: a sessão vive no navegador.
+- **Nada de segredo no front**: tudo o que chega ao navegador é público. A API fica na mesma origem do front em todo ambiente (proxy do `ng serve` em dev, Nginx do host em staging e produção). Estrutura completa em [`docs/configuracao.md`](docs/configuracao.md).
+
 ## Comandos
 
 ```bash
