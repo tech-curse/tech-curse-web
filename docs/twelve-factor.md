@@ -8,14 +8,14 @@ Legenda: ✅ atendido · ⚠️ atendido em parte · ❌ não atendido · — n�
 | --- | --- | --- | --- | --- |
 | **I. Base de código** | ✅ | Um repositório (`tech-curse/tech-curse-web`) e uma imagem por versão, usada em staging e em produção | | |
 | **II. Dependências** | ✅ | `package-lock.json` instalado com `npm ci`; Node fixo no `.nvmrc` | | |
-| **III. Configuração** | ❌ | | O endereço da API é fixado no build (`src/environments/`), então cada ambiente exige um build diferente | `WEB-NAV-010` (Fase 4) |
-| **IV. Serviços de apoio** | ⚠️ | A API é o único serviço de apoio, acessada por URL | A URL vem do build, não da configuração | `WEB-NAV-010` (Fase 4) |
+| **III. Configuração** | ❌ | | O endereço da API é fixado no build (`src/environments/`), então cada ambiente exige um build diferente | `WEB-NAV-010` (Fase 4); estrutura em [`configuracao.md`](configuracao.md) |
+| **IV. Serviços de apoio** | ⚠️ | A API é o único serviço de apoio, acessada por URL | A URL vem do build. O alvo: a API na mesma origem do front em todo ambiente ([`configuracao.md`](configuracao.md)) | `WEB-NAV-010` (Fase 4) |
 | **V. Build, release, run** | ❌ | | Um build por ambiente. O alvo: build único na imagem; a release junta a imagem com o `config.json` do ambiente | `WEB-NAV-010` (Fase 4); deploy na Fase 7 |
 | **VI. Processos** | ✅ | Arquivos estáticos; a sessão vive no navegador (`WEB-AUTH`), nada fica no servidor | | |
 | **VII. Vínculo de porta** | ⚠️ | | A imagem precisa servir os arquivos pelo próprio Nginx, numa porta sem privilégio, com usuário não root; o Nginx do host só roteia | Fase 4 |
 | **VIII. Concorrência** | ✅ | Sem estado, qualquer número de réplicas atende igual | | |
 | **IX. Descartabilidade** | ⚠️ | | O Nginx da imagem precisa encerrar com `SIGQUIT` (fim gracioso) e ter healthcheck | Fase 4 |
-| **X. Paridade dev/prod** | ⚠️ | O mesmo código nos dois ambientes | Em desenvolvimento roda `ng serve`, e em produção os arquivos de `ng build`. Os testes end-to-end rodam contra o build de produção para reduzir a diferença | Fase 3 (Playwright); Fase 4 |
+| **X. Paridade dev/prod** | ⚠️ | O mesmo código nos dois ambientes | Em desenvolvimento roda `ng serve`, e em produção os arquivos de `ng build`. Os testes end-to-end rodam contra o build de produção, e o proxy de desenvolvimento deixa a API na mesma origem também no `ng serve` | Fase 3 (Playwright); Fase 4 (proxy) |
 | **XI. Logs** | ⚠️ | | O Nginx da imagem deve escrever o log de acesso e o de erro no stdout e no stderr; a coleta é do ambiente | Fase 4 (contêiner); Fase 8 (coleta) |
 | **XII. Processos administrativos** | — | Não há tarefa administrativa no front-end | | |
 
