@@ -47,6 +47,8 @@ Não há base de testes nem build de imagem neste repositório: os dois foram re
 
 O CI (`.github/workflows/ci.yml`) roda em todo PR e em todo push na `main`: `npm ci`, `npm run lint`, `npm run format:check` e `npm run build`, com Node da versão do `.nvmrc`. O job se chama `ci`, e esse é o nome do check obrigatório na proteção da `main`; renomear o job quebra a proteção. Quando existir o script `test`, ele entra como mais um passo do mesmo job.
 
+**Atualização do Angular é sempre por `ng update`**, nunca por `npm install` avulso: os pacotes `@angular/*` precisam ficar na mesma versão, e o `ng update` resolve os peers em conjunto e roda as migrações. Por isso o Dependabot (`.github/dependabot.yml`) ignora majors do Angular, do `angular-eslint` e do TypeScript (a versão suportada do TypeScript é ditada pelo Angular) e agrupa os pacotes que sobem juntos (`angular`, `ng-icons`).
+
 ## Decisões registradas
 
 - `erroInterceptor` também silencia `400` (além de `401`/`422`) — os formulários tratam esse status inline (ex.: credenciais inválidas no login).
