@@ -6,8 +6,8 @@
   <div hlmCardContent>
     <form [formGroup]="formulario" (ngSubmit)="enviar()" novalidate class="flex flex-col gap-4">
       <div class="flex flex-col gap-1.5">
-        <label hlmLabel for="nome">Nome de usuário</label>
-        <input hlmInput id="nome" type="text" formControlName="nome" autocomplete="username" />
+        <label hlmLabel for="nome">Nome</label>
+        <input hlmInput id="nome" type="text" formControlName="nome" autocomplete="name" />
         @if (mensagemDe('nome'); as msg) {
           <p class="text-sm text-destructive">{{ msg }}</p>
         }

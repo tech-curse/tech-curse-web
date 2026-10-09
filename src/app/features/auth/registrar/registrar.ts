@@ -8,13 +8,12 @@ import { HlmLabelImports } from '@spartan-ng/helm/label';
 import { AutenticacaoService } from '../../../core/auth/autenticacao.service';
 import { ehErroApi } from '../../../core/http/erro-api';
 import { NotificacaoService } from '../../../core/notificacao/notificacao.service';
-import { nomeUsuarioValidator, senhaForteValidator, senhasIguaisValidator } from '../validadores';
+import { senhaForteValidator, senhasIguaisValidator } from '../validadores';
 
 type Campo = 'nome' | 'email' | 'senha' | 'confirmacaoSenha';
 
 const CAMPO_POR_CODIGO_IDENTITY: Record<string, Campo> = {
-  DuplicateUserName: 'nome',
-  InvalidUserName: 'nome',
+  Nome: 'nome',
   DuplicateEmail: 'email',
   InvalidEmail: 'email',
 };
@@ -45,7 +44,7 @@ export class RegistrarComponent {
     {
       nome: new FormControl('', {
         nonNullable: true,
-        validators: [Validators.required, nomeUsuarioValidator],
+        validators: [Validators.required, Validators.maxLength(100)],
       }),
       email: new FormControl('', {
         nonNullable: true,
@@ -92,8 +91,7 @@ export class RegistrarComponent {
     if (!controle.touched) return null;
     if (controle.hasError('required')) return 'Campo obrigatório.';
     if (controle.hasError('email')) return 'Informe um e-mail válido.';
-    if (controle.hasError('nomeUsuario'))
-      return 'Use apenas letras, números e os símbolos - . _ @ + (sem espaços).';
+    if (controle.hasError('maxlength')) return 'Use no máximo 100 caracteres.';
     if (controle.hasError('senhaForte')) {
       return 'Mínimo de 8 caracteres com maiúscula, minúscula, número e símbolo.';
     }

@@ -16,6 +16,10 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Testes unitários com Vitest (builder `@angular/build:unit-test`, jsdom) e testes end-to-end com Playwright contra o bundle de produção. Primeiros testes: sessão gravada e leitura do JWT (`WEB-AUTH-016` a `WEB-AUTH-019`), navegação sem login (`WEB-NAV-001`, `WEB-NAV-003`, `WEB-NAV-004`) e validação dos formulários (`WEB-AUTH-003`, `WEB-AUTH-006`).
 - Cobertura e relatório de rastreabilidade entre especificação e testes no resumo de cada execução do CI.
 
+### Alterado
+
+- O campo nome do registro aceita o nome completo, com espaços e acentos, até 100 caracteres (`WEB-AUTH-007`), acompanhando a API. O registro deixa de enviar `role`, que a API ignora (`WEB-AUTH-009`).
+
 ### Removido
 
 - Configuração `ng test` do VS Code, que chamava um script `test` inexistente.
