@@ -33,7 +33,17 @@ O endereço da API em desenvolvimento fica em `src/environments/environment.deve
 
 ## Como testar
 
-Ainda não há testes automatizados: testes unitários dos serviços e guards de autenticação e testes end-to-end com Playwright estão planejados. Até lá, as verificações disponíveis são:
+```bash
+npm test                 # testes unitários (Vitest, em Node com jsdom)
+npm run test:cobertura   # o mesmo, com relatório de cobertura em coverage/
+npm run e2e              # testes end-to-end (Playwright, Chromium)
+```
+
+Antes do primeiro `npm run e2e`, instale o navegador com `npx playwright install chromium`. Os testes end-to-end sobem sozinhos o app com a configuração de produção (`ng serve --configuration production`, porta 4300).
+
+Cada teste traz no nome o cenário da [especificação](docs/especificacoes/README.md) que cobre. Para ver quais cenários implementados ainda não têm teste: `node scripts/rastreabilidade.mjs`.
+
+Verificações de qualidade:
 
 ```bash
 npm run lint
@@ -41,7 +51,7 @@ npm run format:check
 npm run build
 ```
 
-O CI roda os mesmos três comandos em todo pull request e em todo push na `main`.
+O CI roda tudo isso em todo pull request e em todo push na `main`: lint, formatação, build, testes unitários com cobertura e rastreabilidade no job `ci`, e os testes end-to-end no job `e2e`.
 
 ## Configuração
 

@@ -54,9 +54,16 @@ npx ng g @spartan-ng/cli:ui <primitivo>  # components.json define o destino (src
 2. Portal do aluno — matrícula, `/me`, pagamentos.
 3. Painel administrativo — **não iniciado.** O plano de fases foi encerrado em 2026-10-08: o desenvolvimento de features está pausado para o deploy do estado atual em produção.
 
-Não há base de testes nem build de imagem neste repositório: os dois foram removidos em 2026-10-08 e serão refeitos.
+Não há build de imagem neste repositório; ele entra na Fase 4.
 
-O CI (`.github/workflows/ci.yml`) roda em todo PR e em todo push na `main`: `npm ci`, `npm run lint`, `npm run format:check` e `npm run build`, com Node da versão do `.nvmrc`. O job se chama `ci`, e esse é o nome do check obrigatório na proteção da `main`; renomear o job quebra a proteção. Quando existir o script `test`, ele entra como mais um passo do mesmo job.
+## Testes
+
+- **Unitários:** Vitest pelo builder `@angular/build:unit-test` (`npm test`), em Node com jsdom, arquivos `*.spec.ts` ao lado do código em `src/`. Configuração em `angular.json` (alvo `test`) e `tsconfig.spec.json`; o `tsconfig.app.json` exclui os `*.spec.ts` do build do app.
+- **End-to-end:** Playwright em `e2e/` (`npm run e2e`), só Chromium. O `playwright.config.ts` sobe o app com `ng serve --configuration production` na porta 4300: bundle de produção, o mais perto do que vai para o ar antes da imagem Nginx. Fluxos que dependem da API entram com a API rodando no CI (Fase 3c).
+- **Todo teste começa o nome pelo ID do cenário** da especificação: `it('WEB-AUTH-016: ...')`, `test('WEB-NAV-001: ...')`. `scripts/rastreabilidade.mjs` lista os cenários implementados sem teste e falha se um teste citar ID inexistente.
+- Seletores do Playwright: prefira papel e rótulo acessível (`getByRole`, `getByLabel`); `data-teste` quando não houver um rótulo estável.
+
+O CI (`.github/workflows/ci.yml`) roda em todo PR e em todo push na `main`, com Node da versão do `.nvmrc`. O job `ci` faz `npm ci`, lint, `format:check`, build, testes unitários com cobertura e o relatório de rastreabilidade (cobertura e rastreabilidade vão para o resumo da execução). O job `e2e` roda o Playwright e guarda o relatório como artefato quando falha. `ci` é o check obrigatório na proteção da `main`; renomear o job quebra a proteção. O `e2e` vira obrigatório depois de alguns dias estável.
 
 **Atualização do Angular é sempre por `ng update`**, nunca por `npm install` avulso: os pacotes `@angular/*` precisam ficar na mesma versão, e o `ng update` resolve os peers em conjunto e roda as migrações. Por isso o Dependabot (`.github/dependabot.yml`) ignora majors do Angular, do `angular-eslint` e do TypeScript (a versão suportada do TypeScript é ditada pelo Angular) e agrupa os pacotes que sobem juntos (`angular`, `ng-icons`).
 
