@@ -27,8 +27,7 @@ Dar ao aluno um lugar para ver os cursos em que está matriculado, os pagamentos
 *Dado* um usuário `Student` para quem `GET /Student/me` responde `404` (`ALU-003`)
 *Então* a área mostra `"Não encontramos seu perfil de aluno. Fale com o administrador."` e o link `"Ver catálogo"`
 *E* nenhuma notificação de erro aparece
-**Status:** divergente: correção proposta para a Fase 3
-**Hoje:** o texto é `"Seu cadastro está aguardando liberação por um administrador."`. Ele descreve um fluxo que não existe mais: o perfil nasce junto com a conta (`AUTH-001`), e a proposta `ALU-020` remove o endpoint pelo qual um administrador criaria o perfil. Um aluno sem perfil é uma inconsistência, não uma espera.
+**Status:** implementado
 
 **WEB-ALU-003: Recarregar o perfil não desmonta a página**
 *Dado* o perfil já carregado
@@ -111,9 +110,7 @@ Dar ao aluno um lugar para ver os cursos em que está matriculado, os pagamentos
 
 ## Divergências
 
-| Cenário | Hoje | Proposta | Quando |
-| --- | --- | --- | --- |
-| `WEB-ALU-002` | `"Seu cadastro está aguardando liberação por um administrador."` | `"Não encontramos seu perfil de aluno. Fale com o administrador."` | Fase 3 |
+Nenhuma: o comportamento atual segue esta especificação.
 
 ## Fora de escopo
 
