@@ -27,7 +27,7 @@ Deixar a pessoa criar a conta, entrar e continuar logada enquanto a sessão for 
 **WEB-AUTH-002: Credenciais erradas mostram o erro no formulário**
 *Quando* a API recusa o login
 *Então* o formulário mostra o `detail` da resposta (`"E-mail ou senha incorretos."`, ver `AUTH-016`), sem notificação flutuante, e a pessoa continua em `/entrar`
-**Status:** implementado (o texto depende da correção do `AUTH-016` na API; hoje uma senha errada mostra `"Usuário não autenticado."`)
+**Status:** implementado
 
 **WEB-AUTH-003: O formulário de login valida antes de chamar a API**
 *Quando* o e-mail está vazio ou inválido, ou a senha está vazia

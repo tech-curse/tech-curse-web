@@ -21,15 +21,14 @@ export class TemaService {
 
   constructor() {
     effect(() => {
-      const escuro = this.tema() === 'escuro';
-      this.documento.documentElement.classList.toggle('dark', escuro);
-      try {
-        localStorage.setItem(CHAVE_TEMA, this.tema());
-      } catch {}
+      this.documento.documentElement.classList.toggle('dark', this.tema() === 'escuro');
     });
   }
 
   alternar(): void {
     this.tema.update((atual) => (atual === 'escuro' ? 'claro' : 'escuro'));
+    try {
+      localStorage.setItem(CHAVE_TEMA, this.tema());
+    } catch {}
   }
 }

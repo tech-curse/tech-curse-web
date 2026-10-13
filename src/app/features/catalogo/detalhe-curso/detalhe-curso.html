@@ -55,8 +55,8 @@
               {{ enviando() ? 'Matriculando...' : 'Matricular-me' }}
             </button>
             @if (perfilAluno.estado() === 'pendente') {
-              <p class="text-sm text-muted-foreground">
-                Seu cadastro está aguardando liberação por um administrador.
+              <p class="text-sm text-muted-foreground" data-teste="sem-perfil">
+                Não encontramos seu perfil de aluno. Fale com o administrador.
               </p>
             }
           }

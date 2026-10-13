@@ -89,6 +89,13 @@
             "runner": "vitest",
             "tsConfig": "tsconfig.spec.json",
             "buildTarget": "tech-curse-web:build:development",
+            "coverageInclude": [
+              "src/app/**/*.ts"
+            ],
+            "coverageExclude": [
+              "src/app/shared/ui/**",
+              "src/app/**/*.spec.ts"
+            ],
             "coverageReporters": [
               "text-summary",
               "json-summary",

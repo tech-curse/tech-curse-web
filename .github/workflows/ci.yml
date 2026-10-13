@@ -45,7 +45,7 @@ jobs:
 
       - name: Rastreabilidade
         if: ${{ !cancelled() }}
-        run: node scripts/rastreabilidade.mjs >> "$GITHUB_STEP_SUMMARY"
+        run: node scripts/rastreabilidade.mjs --estrito >> "$GITHUB_STEP_SUMMARY"
 
   e2e:
     name: e2e
