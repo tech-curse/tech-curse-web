@@ -93,7 +93,7 @@ export class RegistrarComponent {
     if (controle.hasError('email')) return 'Informe um e-mail válido.';
     if (controle.hasError('maxlength')) return 'Use no máximo 100 caracteres.';
     if (controle.hasError('senhaForte')) {
-      return 'Mínimo de 8 caracteres com maiúscula, minúscula, número e símbolo.';
+      return 'De 12 a 128 caracteres, com maiúscula, minúscula, número e símbolo.';
     }
     if (campo === 'confirmacaoSenha' && this.formulario.hasError('senhasDiferentes')) {
       return 'As senhas não coincidem.';

@@ -26,6 +26,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Alterado
 
+- O formulário de registro exige senha de 12 a 128 caracteres, com maiúscula, minúscula, número e símbolo, acompanhando a API (`WEB-AUTH-006`).
 - O campo nome do registro aceita o nome completo, com espaços e acentos, até 100 caracteres (`WEB-AUTH-007`), acompanhando a API. O registro deixa de enviar `role`, que a API ignora (`WEB-AUTH-009`).
 
 ### Corrigido

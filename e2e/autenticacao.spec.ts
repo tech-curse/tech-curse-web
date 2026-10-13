@@ -221,7 +221,7 @@ test('WEB-AUTH-006: o formulário de registro mostra os erros sem chamar a API',
   await page.getByRole('button', { name: 'Criar conta' }).click();
 
   await expect(
-    page.getByText('Mínimo de 8 caracteres com maiúscula, minúscula, número e símbolo.'),
+    page.getByText('De 12 a 128 caracteres, com maiúscula, minúscula, número e símbolo.'),
   ).toBeVisible();
   await expect(page.getByText('As senhas não coincidem.')).toBeVisible();
   expect(requisicoes).toEqual([]);
