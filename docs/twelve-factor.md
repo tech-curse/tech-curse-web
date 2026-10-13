@@ -15,7 +15,7 @@ Legenda: ✅ atendido · ⚠️ atendido em parte · ❌ não atendido · — n�
 | **VII. Vínculo de porta** | ⚠️ | | A imagem precisa servir os arquivos pelo próprio Nginx, numa porta sem privilégio, com usuário não root; o Nginx do host só roteia | Fase 4 |
 | **VIII. Concorrência** | ✅ | Sem estado, qualquer número de réplicas atende igual | | |
 | **IX. Descartabilidade** | ⚠️ | | O Nginx da imagem precisa encerrar com `SIGQUIT` (fim gracioso) e ter healthcheck | Fase 4 |
-| **X. Paridade dev/prod** | ⚠️ | O mesmo código nos dois ambientes | Em desenvolvimento roda `ng serve`, e em produção os arquivos de `ng build`. Os testes end-to-end rodam contra o build de produção, e o proxy de desenvolvimento deixa a API na mesma origem também no `ng serve` | Fase 3 (Playwright); Fase 4 (proxy) |
+| **X. Paridade dev/prod** | ⚠️ | O mesmo código nos dois ambientes. Os testes end-to-end rodam contra o build de produção (`ng serve --configuration production`), com a API na mesma origem | Em desenvolvimento, o `ng serve` ainda chama a API em outra origem (`localhost:5130`); o proxy de desenvolvimento a coloca na mesma origem | Fase 4 (proxy) |
 | **XI. Logs** | ⚠️ | | O Nginx da imagem deve escrever o log de acesso e o de erro no stdout e no stderr; a coleta é do ambiente | Fase 4 (contêiner); Fase 8 (coleta) |
 | **XII. Processos administrativos** | — | Não há tarefa administrativa no front-end | | |
 
