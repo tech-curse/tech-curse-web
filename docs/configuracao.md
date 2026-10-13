@@ -31,9 +31,14 @@ Com isso, o endereço da API é igual em todo lugar (paridade dev/prod, fator X)
 | **Desenvolvimento** (`ng serve`) | `public/config.json`, fora do git, copiado de um `public/config.example.json` versionado. O proxy de desenvolvimento (`proxy.conf.json`, versionado) encaminha `/tech-curse` para a API no host |
 | **Testes unitários** (Vitest) | A configuração é injetada no teste; nenhum arquivo |
 | **Testes end-to-end** (Playwright) | O build de produção, com o `/config.json` respondido pelo fixture de `e2e/apoio/teste.ts` (`page.route`); cada teste pode trocar o conteúdo |
-| **Staging e produção** | O contêiner do front gera o `config.json` ao subir, a partir de variáveis de ambiente do `.env` de cada ambiente na VPS (a imagem oficial do Nginx já processa templates com variáveis de ambiente) |
+| **Imagem** (staging e produção) | O Nginx da imagem responde `/config.json` a partir de `API_URL` e `PAGAMENTOS_HABILITADOS`, variáveis do `.env` de cada ambiente na VPS (`nginx/default.conf.template`, processado na subida pela imagem oficial do Nginx). Um valor inválido impede o contêiner de subir (`nginx/05-validar-configuracao.sh`) |
 
-Nada disso é segredo; o `.env` da VPS só concentra num lugar a configuração de cada ambiente. A lista das variáveis do contêiner do front entra no `.env.example` deste repositório na Fase 4.
+Nada disso é segredo; o `.env` da VPS só concentra num lugar a configuração de cada ambiente. As variáveis do contêiner estão no `.env.example`:
+
+| Variável | Vira | Padrão na imagem |
+| --- | --- | --- |
+| `API_URL` | `apiUrl` | `/tech-curse` |
+| `PAGAMENTOS_HABILITADOS` | `pagamentosHabilitados` (`true` ou `false`) | `false` |
 
 ## Regras
 

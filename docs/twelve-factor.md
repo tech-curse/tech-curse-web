@@ -10,13 +10,13 @@ Legenda: ✅ atendido · ⚠️ atendido em parte · ❌ não atendido · — n�
 | **II. Dependências** | ✅ | `package-lock.json` instalado com `npm ci`; Node fixo no `.nvmrc` | | |
 | **III. Configuração** | ✅ | O endereço da API e as funcionalidades ligadas vêm do `config.json`, lido em runtime; um build só para todos os ambientes (`WEB-NAV-010`). Estrutura em [`configuracao.md`](configuracao.md) | | |
 | **IV. Serviços de apoio** | ✅ | A API é o único serviço de apoio, na mesma origem do front em todo ambiente (proxy do `ng serve` em desenvolvimento, Nginx do host nos ambientes reais); o caminho vem do `config.json` | | |
-| **V. Build, release, run** | ⚠️ | Um build só; o `config.json` é a parte da release | A imagem que junta o build com o `config.json` do ambiente | Fase 4 (imagem); deploy na Fase 7 |
+| **V. Build, release, run** | ⚠️ | Um build só, dentro da imagem; a release é a imagem mais as variáveis do ambiente, que viram o `config.json` na subida | A publicação da imagem e o deploy | Publicação ainda na Fase 4; deploy na Fase 7 |
 | **VI. Processos** | ✅ | Arquivos estáticos; a sessão vive no navegador (`WEB-AUTH`), nada fica no servidor | | |
-| **VII. Vínculo de porta** | ⚠️ | | A imagem precisa servir os arquivos pelo próprio Nginx, numa porta sem privilégio, com usuário não root; o Nginx do host só roteia | Fase 4 |
+| **VII. Vínculo de porta** | ✅ | A imagem serve os arquivos pelo próprio Nginx na porta `8080`, sem privilégio, com o usuário `101`; o Nginx do host só roteia | | |
 | **VIII. Concorrência** | ✅ | Sem estado, qualquer número de réplicas atende igual | | |
-| **IX. Descartabilidade** | ⚠️ | | O Nginx da imagem precisa encerrar com `SIGQUIT` (fim gracioso) e ter healthcheck | Fase 4 |
+| **IX. Descartabilidade** | ✅ | O Nginx da imagem sobe em segundos, encerra com `SIGQUIT` (fim gracioso, código `0`) e tem healthcheck (`/saude`) | | |
 | **X. Paridade dev/prod** | ✅ | O mesmo código e a API na mesma origem em todo ambiente: proxy do `ng serve` em desenvolvimento, Nginx nos ambientes reais. Os testes end-to-end rodam contra o build de produção | | |
-| **XI. Logs** | ⚠️ | | O Nginx da imagem deve escrever o log de acesso e o de erro no stdout e no stderr; a coleta é do ambiente | Fase 4 (contêiner); Fase 8 (coleta) |
+| **XI. Logs** | ⚠️ | O Nginx da imagem escreve o log de acesso no stdout e o de erro no stderr | A coleta, que é do ambiente | Fase 8 |
 | **XII. Processos administrativos** | — | Não há tarefa administrativa no front-end | | |
 
 ## Exceções aceitas

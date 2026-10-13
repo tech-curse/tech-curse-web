@@ -20,6 +20,9 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Com `pagamentosHabilitados` desligado (o padrão), o menu não mostra "Pagamentos" e `/aluno/pagamentos` cai em "Página não encontrada" (`WEB-ALU-011`).
 - Proxy do `ng serve` (`proxy.conf.json`): em desenvolvimento, `/tech-curse` vai para a API em `http://localhost:5130`, na mesma origem do front.
 
+- Imagem de contêiner (`Dockerfile`): build multi-stage, Nginx sem root na porta `8080`, healthcheck, encerramento com `SIGQUIT`, logs no stdout e no stderr, cabeçalhos de segurança e cache por tipo de arquivo. O `config.json` é gerado na subida a partir de `API_URL` e `PAGAMENTOS_HABILITADOS` (`.env.example`), e um valor inválido impede o contêiner de subir.
+- O job `e2e` do CI constrói a imagem, verifica o contêiner (`scripts/verificar-conteiner.sh`) e roda os testes end-to-end contra ela.
+
 ### Alterado
 
 - O campo nome do registro aceita o nome completo, com espaços e acentos, até 100 caracteres (`WEB-AUTH-007`), acompanhando a API. O registro deixa de enviar `role`, que a API ignora (`WEB-AUTH-009`).

@@ -54,7 +54,22 @@ npx ng g @spartan-ng/cli:ui <primitivo>  # components.json define o destino (src
 2. Portal do aluno — matrícula, `/me`, pagamentos.
 3. Painel administrativo — **não iniciado.** O plano de fases foi encerrado em 2026-10-08: o desenvolvimento de features está pausado para o deploy do estado atual em produção.
 
-Não há build de imagem neste repositório; ele entra na Fase 4.
+## Imagem
+
+`Dockerfile` na raiz, em dois estágios:
+
+- **Build:** Node `24.21.0-alpine3.24` (a versão do `.nvmrc`), `npm ci` numa camada própria e depois `COPY . .` com `ng build`. O contexto é filtrado pelo `.dockerignore`, e não por uma lista de `COPY`: a primeira versão listava arquivos, esqueceu o `.postcssrc.json`, e a imagem saiu sem o Tailwind processado. Quem achou foram os testes end-to-end contra a imagem.
+- **Runtime:** `nginx-unprivileged:1.30.4-alpine3.24` (linha estável do Nginx), usuário `101`, porta `8080`, `SIGQUIT` para encerrar e healthcheck em `/saude` (com `wget`, que a Alpine tem).
+
+Configuração do Nginx em `nginx/`:
+
+- `default.conf.template`: a imagem oficial passa o arquivo pelo `envsubst` na subida, só com as variáveis definidas, então `$uri` e companhia continuam intactos. Ele responde `/config.json` a partir de `API_URL` e `PAGAMENTOS_HABILITADOS`, com `Cache-Control: no-store`. Os bundles (`.js`, `.css`, fontes) têm hash no nome e cache imutável de um ano; o resto cai no `index.html` com `no-cache`, o fallback da SPA. `server_tokens off`.
+- `seguranca.conf`: cabeçalhos de segurança. Precisa de `include` em cada `location` que tem `add_header`, porque um `add_header` no `location` anula todos os herdados do `server`.
+- `05-validar-configuracao.sh`: roda antes do `envsubst` e impede a subida com `PAGAMENTOS_HABILITADOS` diferente de `true`/`false` ou `API_URL` fora de caminho ou `http(s)`. Como o valor vai cru para dentro do JSON, a validação também impede um `config.json` quebrado.
+
+O job `e2e` do CI constrói a imagem, roda `scripts/verificar-conteiner.sh` e executa os testes end-to-end **contra o contêiner** (`E2E_URL`), não contra o `ng serve`. Localmente, `npm run e2e` continua subindo o `ng serve --configuration production`; com `E2E_URL` definido, o Playwright usa o endereço dado e não sobe servidor.
+
+No Git Bash do Windows, `docker run -e API_URL=/tech-curse` vira `C:/Program Files/Git/tech-curse` pela conversão de caminhos do MSYS. O script de verificação exporta `MSYS_NO_PATHCONV=1`; faça o mesmo ao rodar a imagem à mão.
 
 ## Testes
 
@@ -65,7 +80,7 @@ Não há build de imagem neste repositório; ele entra na Fase 4.
 - **Cobertura só mede os unitários**, sobre todo o `src/app` (menos `shared/ui`, gerado pelo spartan, e os `*.spec.ts`), por `coverageInclude` no `angular.json`. Sem isso, só os arquivos importados por algum teste entravam na conta, e o número saía inflado. Componentes de tela são cobertos pelos testes end-to-end, que não entram nessa métrica.
 - Seletores do Playwright: prefira papel e rótulo acessível (`getByRole`, `getByLabel`); `data-teste` quando não houver um rótulo estável.
 
-O CI (`.github/workflows/ci.yml`) roda em todo PR e em todo push na `main`, com Node da versão do `.nvmrc`. O job `ci` faz `npm ci`, lint, `format:check`, build, testes unitários com cobertura e o relatório de rastreabilidade (cobertura e rastreabilidade vão para o resumo da execução). O job `e2e` roda o Playwright e guarda o relatório como artefato quando falha. `ci` e `e2e` são os checks obrigatórios na proteção da `main` (ruleset `protecao-da-main`); renomear um dos jobs quebra a proteção.
+O CI (`.github/workflows/ci.yml`) roda em todo PR e em todo push na `main`, com Node da versão do `.nvmrc`. O job `ci` faz `npm ci`, lint, `format:check`, build, testes unitários com cobertura e o relatório de rastreabilidade (cobertura e rastreabilidade vão para o resumo da execução). O job `e2e` constrói a imagem, verifica o contêiner e roda o Playwright contra ele, guardando o relatório como artefato quando falha. `ci` e `e2e` são os checks obrigatórios na proteção da `main` (ruleset `protecao-da-main`); renomear um dos jobs quebra a proteção.
 
 **Atualização do Angular é sempre por `ng update`**, nunca por `npm install` avulso: os pacotes `@angular/*` precisam ficar na mesma versão, e o `ng update` resolve os peers em conjunto e roda as migrações. Por isso o Dependabot (`.github/dependabot.yml`) ignora majors do Angular, do `angular-eslint` e do TypeScript (a versão suportada do TypeScript é ditada pelo Angular) e agrupa os pacotes que sobem juntos (`angular`, `ng-icons`).
 
