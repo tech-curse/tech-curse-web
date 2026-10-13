@@ -21,6 +21,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - Proxy do `ng serve` (`proxy.conf.json`): em desenvolvimento, `/tech-curse` vai para a API em `http://localhost:5130`, na mesma origem do front.
 
 - Imagem de contêiner (`Dockerfile`): build multi-stage, Nginx sem root na porta `8080`, healthcheck, encerramento com `SIGQUIT`, logs no stdout e no stderr, cabeçalhos de segurança e cache por tipo de arquivo. O `config.json` é gerado na subida a partir de `API_URL` e `PAGAMENTOS_HABILITADOS` (`.env.example`), e um valor inválido impede o contêiner de subir.
+- Publicação da imagem no GHCR (`ghcr.io/tech-curse/tech-curse-web`) depois de os jobs `ci` e `e2e` passarem: `sha-<commit>` a cada push na `main` e `X.Y.Z` a cada tag de versão, nunca `latest`, com SBOM e atestação de proveniência.
 - O job `e2e` do CI constrói a imagem, verifica o contêiner (`scripts/verificar-conteiner.sh`) e roda os testes end-to-end contra ela.
 
 ### Alterado
