@@ -1,4 +1,5 @@
-import { Request, expect, test } from '@playwright/test';
+import { Request } from '@playwright/test';
+import { expect, servirConfiguracao, test } from './apoio/teste';
 import {
   ApiFalsa,
   PERFIL,
@@ -218,6 +219,7 @@ test.describe('listagem', () => {
 
     const contexto = await browser.newContext();
     const admin = await contexto.newPage();
+    await servirConfiguracao(admin);
     await entrarComo(admin, 'Admin');
     (await ApiFalsa.em(admin)).quando('GET', '/Course', servirCatalogo(cursos));
     await admin.goto('/cursos');

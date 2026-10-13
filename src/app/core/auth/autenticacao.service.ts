@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { CONFIGURACAO } from '../configuracao/configuracao';
 import { Role, Usuario, extrairUsuario } from './jwt';
 import { Sessao, gravarSessao, lerSessao, limparSessao } from './sessao';
 
@@ -21,6 +21,7 @@ interface AuthOutputDto {
 
 @Injectable({ providedIn: 'root' })
 export class AutenticacaoService {
+  private readonly apiUrl = inject(CONFIGURACAO).apiUrl;
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly sessao = signal<Sessao | null>(lerSessao());
@@ -41,14 +42,14 @@ export class AutenticacaoService {
 
   async entrar(email: string, senha: string): Promise<void> {
     const resposta = await firstValueFrom(
-      this.http.post<AuthOutputDto>(`${environment.apiUrl}/Auth/login`, { email, password: senha }),
+      this.http.post<AuthOutputDto>(`${this.apiUrl}/Auth/login`, { email, password: senha }),
     );
     this.aplicarSessao(resposta);
   }
 
   async registrar(dados: DadosRegistro): Promise<void> {
     await firstValueFrom(
-      this.http.post(`${environment.apiUrl}/Auth/register`, {
+      this.http.post(`${this.apiUrl}/Auth/register`, {
         name: dados.nome.trim(),
         email: dados.email,
         password: dados.senha,
@@ -62,7 +63,7 @@ export class AutenticacaoService {
     const sessao = this.sessao();
     if (!sessao) return Promise.reject(new Error('Não há sessão para renovar.'));
     this.renovacaoEmAndamento = firstValueFrom(
-      this.http.post<AuthOutputDto>(`${environment.apiUrl}/Auth/refresh`, {
+      this.http.post<AuthOutputDto>(`${this.apiUrl}/Auth/refresh`, {
         accessToken: sessao.accessToken,
         refreshToken: sessao.refreshToken,
       }),

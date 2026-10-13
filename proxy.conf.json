@@ -1,0 +1,6 @@
+{
+  "/tech-curse": {
+    "target": "http://localhost:5130",
+    "secure": false
+  }
+}

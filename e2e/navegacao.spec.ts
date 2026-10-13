@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './apoio/teste';
 import {
   ApiFalsa,
   CHAVE_SESSAO,
@@ -218,4 +218,46 @@ test('WEB-NAV-004: rota inexistente mostra "Página não encontrada"', async ({ 
   await expect(page.getByText('Página não encontrada')).toBeVisible();
   await expect(page.getByText('O endereço acessado não existe.')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Voltar ao início' })).toBeVisible();
+});
+
+test.describe('configuração em runtime', () => {
+  test.describe('com outro endereço de API', () => {
+    test.use({ configuracao: { apiUrl: '/outra-api', pagamentosHabilitados: true } });
+
+    test('WEB-NAV-010: o endereço da API vem do config.json', async ({ page }) => {
+      const caminhos: string[] = [];
+      await page.route('**/outra-api/**', (rota) => {
+        caminhos.push(new URL(rota.request().url()).pathname);
+        return rota.fulfill({ status: 401, json: { detail: 'E-mail ou senha incorretos.' } });
+      });
+
+      await page.goto('/entrar');
+      await page.getByLabel('E-mail').fill('student@teste.com');
+      await page.getByLabel('Senha').fill('Senha@Forte1');
+      await page.getByRole('button', { name: 'Entrar' }).click();
+
+      await expect(page.getByRole('alert')).toHaveText('E-mail ou senha incorretos.');
+      expect(caminhos).toEqual(['/outra-api/Auth/login']);
+    });
+  });
+
+  for (const [caso, configuracao] of [
+    ['ausente', null],
+    ['inválido', { pagamentosHabilitados: true }],
+  ] as const) {
+    test.describe(`com config.json ${caso}`, () => {
+      test.use({ configuracao });
+
+      test(`WEB-NAV-010: config.json ${caso} mostra o erro em vez de abrir o app`, async ({
+        page,
+      }) => {
+        await page.goto('/entrar');
+
+        await expect(page.getByRole('alert')).toHaveText(
+          'Não foi possível carregar a configuração do aplicativo. Tente novamente mais tarde.',
+        );
+        await expect(page.getByRole('button', { name: 'Entrar' })).toHaveCount(0);
+      });
+    });
+  }
 });

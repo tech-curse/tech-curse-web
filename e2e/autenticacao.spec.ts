@@ -1,4 +1,5 @@
-import { Page, expect, test } from '@playwright/test';
+import { Page } from '@playwright/test';
+import { expect, servirConfiguracao, test } from './apoio/teste';
 import {
   ApiFalsa,
   CHAVE_SESSAO,
@@ -184,6 +185,7 @@ test('WEB-AUTH-021: quem está logado não vê login nem registro', async ({ pag
 
   const contexto = await browser.newContext();
   const admin = await contexto.newPage();
+  await servirConfiguracao(admin);
   await entrarComo(admin, 'Admin');
   await ApiFalsa.em(admin);
   await admin.goto('/registrar');

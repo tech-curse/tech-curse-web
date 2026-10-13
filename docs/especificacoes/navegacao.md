@@ -90,7 +90,8 @@ Definir para onde cada pessoa pode ir, o que acontece quando ela tenta ir aonde 
 *Dado* a mesma imagem do front em staging e em produção
 *Quando* o app abre
 *Então* ele lê o endereço da API e as funcionalidades ligadas (como pagamentos, `WEB-ALU-011`) de `/config.json`, servido junto com o app, sem rebuild por ambiente
-**Status:** planejado (Fase 4). Hoje o endereço é fixado no build, em `src/environments/`.
+*E* sem um `config.json` válido, a página mostra `"Não foi possível carregar a configuração do aplicativo. Tente novamente mais tarde."` em vez de abrir o app
+**Status:** implementado
 
 ### Tema e idioma
 
