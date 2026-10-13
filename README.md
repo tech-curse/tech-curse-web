@@ -20,16 +20,17 @@ Stack: Angular 22 (standalone, signals, zoneless) · Tailwind CSS 4 · spartan/u
 Pré-requisitos:
 
 - Node.js 24 (versão em `.nvmrc`; com nvm, rode `nvm use`) e npm 11.
-- A [Tech Curse API](https://github.com/tech-curse/tech-curse-api) rodando em `http://localhost:5130`. Siga o README de lá; o CORS de desenvolvimento da API já libera `http://localhost:4200`.
+- A [Tech Curse API](https://github.com/tech-curse/tech-curse-api) rodando em `http://localhost:5130`. O jeito mais curto é o `docker compose up --build` do repositório da API; o README de lá explica o `.env`.
 
 ```bash
 npm ci
+cp public/config.example.json public/config.json
 npm start
 ```
 
 Abra http://localhost:4200, crie uma conta de aluno em `/registrar` e entre em `/entrar`.
 
-O endereço da API em desenvolvimento fica em `src/environments/environment.development.ts`. O build de produção (`npm run build`) assume a API na mesma origem, em `/tech-curse`, atrás de um proxy reverso.
+O `npm start` encaminha `/tech-curse` para a API em `http://localhost:5130` (`proxy.conf.json`), então o navegador fala com a API na mesma origem do front, como em produção. O `public/config.json` fica fora do git.
 
 ## Como testar
 
@@ -55,7 +56,7 @@ O CI roda tudo isso em todo pull request e em todo push na `main`: lint, formata
 
 ## Configuração
 
-O front-end não lê variáveis de ambiente. A única configuração é o endereço da API, hoje definido em tempo de build pelos arquivos de `src/environments/`.
+O app lê `/config.json` ao abrir, antes de iniciar: `apiUrl` (caminho base da API, `/tech-curse`) e `pagamentosHabilitados` (mostra a área de pagamentos; padrão `false`). O mesmo build serve qualquer ambiente; sem um `config.json` válido, o app mostra um erro em vez de abrir. Detalhes em [`docs/configuracao.md`](docs/configuracao.md).
 
 ## Contribuindo
 

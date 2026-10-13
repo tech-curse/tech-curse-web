@@ -3,6 +3,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { AutenticacaoService } from '../../auth/autenticacao.service';
 import { TemaService } from '../../tema/tema.service';
+import { CONFIGURACAO } from '../../configuracao/configuracao';
 
 interface LinkNavegacao {
   rota: string;
@@ -16,6 +17,7 @@ interface LinkNavegacao {
 })
 export class ShellComponent {
   private readonly auth = inject(AutenticacaoService);
+  private readonly configuracao = inject(CONFIGURACAO);
   protected readonly tema = inject(TemaService);
 
   protected readonly usuario = this.auth.usuario;
@@ -26,11 +28,11 @@ export class ShellComponent {
     const base: LinkNavegacao[] = [{ rota: '/cursos', rotulo: 'Cursos' }];
     if (role === 'Admin' || role === 'Instructor') base.push({ rota: '/admin', rotulo: 'Admin' });
     if (role === 'Student') {
-      base.push(
-        { rota: '/aluno/matriculas', rotulo: 'Meus cursos' },
-        { rota: '/aluno/pagamentos', rotulo: 'Pagamentos' },
-        { rota: '/aluno/perfil', rotulo: 'Perfil' },
-      );
+      base.push({ rota: '/aluno/matriculas', rotulo: 'Meus cursos' });
+      if (this.configuracao.pagamentosHabilitados) {
+        base.push({ rota: '/aluno/pagamentos', rotulo: 'Pagamentos' });
+      }
+      base.push({ rota: '/aluno/perfil', rotulo: 'Perfil' });
     }
     return base;
   });

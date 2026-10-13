@@ -2,8 +2,10 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { environment } from '../../../environments/environment';
+import { CONFIGURACAO } from '../configuracao/configuracao';
 import { AutenticacaoService } from './autenticacao.service';
+
+const API = '/tech-curse';
 
 describe('AutenticacaoService', () => {
   let servico: AutenticacaoService;
@@ -11,7 +13,12 @@ describe('AutenticacaoService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: CONFIGURACAO, useValue: { apiUrl: API, pagamentosHabilitados: true } },
+      ],
     });
     servico = TestBed.inject(AutenticacaoService);
     http = TestBed.inject(HttpTestingController);
@@ -30,7 +37,7 @@ describe('AutenticacaoService', () => {
       confirmacaoSenha: 'Senha@Forte1',
     });
 
-    const requisicao = http.expectOne(`${environment.apiUrl}/Auth/register`);
+    const requisicao = http.expectOne(`${API}/Auth/register`);
     expect(requisicao.request.method).toBe('POST');
     expect(requisicao.request.body).toEqual({
       name: 'João da Silva',

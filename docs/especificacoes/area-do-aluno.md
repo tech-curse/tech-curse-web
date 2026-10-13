@@ -79,10 +79,10 @@ Dar ao aluno um lugar para ver os cursos em que está matriculado, os pagamentos
 *Então* aparece `"Não foi possível carregar seus pagamentos."` e o botão de tentar de novo
 **Status:** implementado
 
-**WEB-ALU-011: Pagamentos fora de produção**
-*Dado* o app em produção, onde o módulo de pagamentos da API está desligado (`TRV-025`)
+**WEB-ALU-011: Pagamentos desligados por configuração**
+*Dado* `pagamentosHabilitados` = `false` no `config.json`, o padrão e o valor de produção enquanto o módulo de pagamentos da API estiver desligado (`TRV-025`)
 *Então* o item de menu `"Pagamentos"` não aparece, e `/aluno/pagamentos` leva a "Página não encontrada"
-**Status:** planejado (antes do primeiro deploy em produção). Depende da configuração em runtime do front (`WEB-NAV-010`).
+**Status:** implementado
 
 ### Perfil
 

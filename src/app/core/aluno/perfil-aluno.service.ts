@@ -1,6 +1,6 @@
 import { HttpContext, httpResource } from '@angular/common/http';
 import { Injectable, computed, inject } from '@angular/core';
-import { environment } from '../../../environments/environment';
+import { CONFIGURACAO } from '../configuracao/configuracao';
 import { MatriculaAluno, PerfilAluno } from '../api/modelos/aluno';
 import { AutenticacaoService } from '../auth/autenticacao.service';
 import { extrairErroApi } from '../http/erro-api';
@@ -10,13 +10,14 @@ export type EstadoPerfilAluno = 'inativo' | 'carregando' | 'pendente' | 'ativo' 
 
 @Injectable({ providedIn: 'root' })
 export class PerfilAlunoService {
+  private readonly apiUrl = inject(CONFIGURACAO).apiUrl;
   private readonly auth = inject(AutenticacaoService);
   private readonly ehAluno = computed(() => this.auth.role() === 'Student');
 
   private readonly perfilRecurso = httpResource<PerfilAluno>(() =>
     this.ehAluno()
       ? {
-          url: `${environment.apiUrl}/Student/me`,
+          url: `${this.apiUrl}/Student/me`,
           context: new HttpContext().set(SILENCIAR_ERRO, true),
         }
       : undefined,
@@ -37,7 +38,7 @@ export class PerfilAlunoService {
 
   readonly matriculasRecurso = httpResource<MatriculaAluno[]>(() => {
     const perfil = this.perfil();
-    return perfil ? `${environment.apiUrl}/Student/${perfil.id}/enrollments` : undefined;
+    return perfil ? `${this.apiUrl}/Student/${perfil.id}/enrollments` : undefined;
   });
 
   readonly matriculas = computed<MatriculaAluno[]>(() =>

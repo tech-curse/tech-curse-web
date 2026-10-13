@@ -2,7 +2,7 @@ import { HttpErrorResponse, HttpInterceptorFn, HttpRequest } from '@angular/comm
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, from, switchMap, throwError } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { CONFIGURACAO } from '../configuracao/configuracao';
 import { AutenticacaoService } from './autenticacao.service';
 
 const ROTAS_SEM_RETRY = /\/Auth\/(login|register|refresh)$/;
@@ -12,7 +12,7 @@ function comToken<T>(req: HttpRequest<T>, token: string | null): HttpRequest<T> 
 }
 
 export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
-  if (!req.url.startsWith(environment.apiUrl)) return next(req);
+  if (!req.url.startsWith(inject(CONFIGURACAO).apiUrl)) return next(req);
 
   const auth = inject(AutenticacaoService);
   const router = inject(Router);

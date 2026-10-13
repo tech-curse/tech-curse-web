@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './apoio/teste';
 import {
   ApiFalsa,
   PERFIL,
@@ -299,5 +299,22 @@ test.describe('perfil', () => {
 
     await expect(page.getByRole('alert')).toHaveText('O nome é inválido.');
     await expect(page.locator(notificacoes)).toHaveCount(0);
+  });
+});
+
+test.describe('pagamentos desligados', () => {
+  test.use({ configuracao: { apiUrl: '/tech-curse', pagamentosHabilitados: false } });
+
+  test('WEB-ALU-011: sem o módulo de pagamentos, o menu e a rota somem', async ({ page }) => {
+    const api = await alunoComPerfil(page);
+    api.quando('GET', '/Course', { corpo: paginaDe([]) });
+
+    await page.goto('/cursos');
+    const menu = page.getByRole('navigation', { name: 'Principal', exact: true });
+    await expect(menu.getByRole('link')).toHaveText(['Cursos', 'Meus cursos', 'Perfil']);
+
+    await page.goto('/aluno/pagamentos');
+    await expect(page.getByText('Página não encontrada')).toBeVisible();
+    expect(api.chamadas('GET', `/Payment/student/${PERFIL.id}`)).toHaveLength(0);
   });
 });

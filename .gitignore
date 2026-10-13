@@ -48,3 +48,5 @@ Thumbs.db
 /test-results
 /playwright-report
 /blob-report
+
+/public/config.json

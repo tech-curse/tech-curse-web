@@ -17,7 +17,7 @@ Front-end Angular da **Tech Curse** (plataforma de cursos). Consome a Tech Curse
 
 O front segue o [Twelve-Factor App](https://12factor.net/pt_br/), adaptado a uma aplicação estática; o checklist está em [`docs/twelve-factor.md`](docs/twelve-factor.md). Regras práticas:
 
-- **Um build só para todos os ambientes.** O que muda por ambiente (endereço da API, funcionalidades ligadas como pagamentos) vem do `config.json` lido em runtime, nunca de `src/environments/` nem de flag de build. Os arquivos de `src/environments/` saem na Fase 4 (`WEB-NAV-010`).
+- **Um build só para todos os ambientes.** O que muda por ambiente (endereço da API, funcionalidades ligadas como pagamentos) vem do `config.json` lido em runtime, nunca de `src/environments/` nem de flag de build. O `src/environments/` não existe mais (`WEB-NAV-010`).
 - **Funcionalidade é ligada por configuração**, com o padrão desligado, nunca por detectar o ambiente (hostname, `isDevMode()` etc.).
 - **Nada de estado no servidor**: a sessão vive no navegador.
 - **Nada de segredo no front**: tudo o que chega ao navegador é público. A API fica na mesma origem do front em todo ambiente (proxy do `ng serve` em dev, Nginx do host em staging e produção). Estrutura completa em [`docs/configuracao.md`](docs/configuracao.md).
@@ -44,7 +44,7 @@ npx ng g @spartan-ng/cli:ui <primitivo>  # components.json define o destino (src
 
 ## Backend
 
-- Base de desenvolvimento: `http://localhost:5130/tech-curse` (`environment.development.ts`).
+- Endereço da API: `apiUrl` do `config.json` (`/tech-curse`), lido pelo `main.ts` antes do bootstrap e injetado pelo token `CONFIGURACAO` (`core/configuracao`). Em desenvolvimento, o proxy do `ng serve` (`proxy.conf.json`) leva `/tech-curse` para a API em `http://localhost:5130`.
 - Claims do JWT: `nameid`, `email`, `role`. Erros em `ProblemDetails`; `422` traz `errors` com **códigos do Identity** (`PasswordRequiresDigit`, `DuplicateEmail`, ...), mapeados para campos em `RegistrarComponent` (`DuplicateEmail` e `InvalidEmail` no e-mail, `Password*` na senha, `Nome` no nome).
 - O nome do registro é livre (1 a 100 caracteres, espaços e acentos); na API, o `UserName` do Identity é o e-mail. Erro `422` do nome chega em `errors.Nome`.
 
@@ -60,7 +60,7 @@ Não há build de imagem neste repositório; ele entra na Fase 4.
 
 - **Unitários:** Vitest pelo builder `@angular/build:unit-test` (`npm test`), em Node com jsdom, arquivos `*.spec.ts` ao lado do código em `src/`. Configuração em `angular.json` (alvo `test`) e `tsconfig.spec.json`; o `tsconfig.app.json` exclui os `*.spec.ts` do build do app.
 - **End-to-end:** Playwright em `e2e/` (`npm run e2e`), só Chromium. O `playwright.config.ts` sobe o app com `ng serve --configuration production` na porta 4300: bundle de produção, o mais perto do que vai para o ar antes da imagem Nginx.
-- **A API dos testes end-to-end é falsa.** O bundle de produção chama a API na mesma origem (`/tech-curse`), e `e2e/apoio/api-falsa.ts` intercepta essas chamadas com `page.route`: cada teste declara as respostas (`api.quando('GET', '/Student/me', { corpo: ... })`), e uma rota sem resposta declarada devolve `501`, para o teste falhar de forma visível. A sessão entra pelo `localStorage` antes de a página abrir (`entrarComo(page, 'Student')`), com um JWT sem assinatura válida: o front só lê as claims. Assim os testes não dependem de banco nem de dados. O fluxo com a API real fica para a Fase 4, com o compose.
+- **A API dos testes end-to-end é falsa.** O bundle de produção chama a API na mesma origem (`/tech-curse`), e `e2e/apoio/api-falsa.ts` intercepta essas chamadas com `page.route`: cada teste declara as respostas (`api.quando('GET', '/Student/me', { corpo: ... })`), e uma rota sem resposta declarada devolve `501`, para o teste falhar de forma visível. Os specs importam `test` e `expect` de `e2e/apoio/teste.ts`, cujo fixture serve o `/config.json` em toda página; `test.use({ configuracao: ... })` troca o conteúdo (`null` responde `404`). Página aberta num `browser.newContext()` precisa de `servirConfiguracao(pagina)`. A sessão entra pelo `localStorage` antes de a página abrir (`entrarComo(page, 'Student')`), com um JWT sem assinatura válida: o front só lê as claims. Assim os testes não dependem de banco nem de dados. O fluxo com a API real fica para a Fase 4, com o compose.
 - **Todo teste começa o nome pelo ID do cenário** da especificação: `it('WEB-AUTH-016: ...')`, `test('WEB-NAV-001: ...')`. `scripts/rastreabilidade.mjs` lista os cenários implementados sem teste e falha se um teste citar ID inexistente. No CI ele roda com `--estrito`: **cenário marcado implementado sem teste reprova o PR**. Vale teste unitário ou end-to-end.
 - **Cobertura só mede os unitários**, sobre todo o `src/app` (menos `shared/ui`, gerado pelo spartan, e os `*.spec.ts`), por `coverageInclude` no `angular.json`. Sem isso, só os arquivos importados por algum teste entravam na conta, e o número saía inflado. Componentes de tela são cobertos pelos testes end-to-end, que não entram nessa métrica.
 - Seletores do Playwright: prefira papel e rótulo acessível (`getByRole`, `getByLabel`); `data-teste` quando não houver um rótulo estável.
@@ -76,7 +76,8 @@ O CI (`.github/workflows/ci.yml`) roda em todo PR e em todo push na `main`, com 
 - `roleGuard` roda em `canMatch` (preserva o lazy-skip) e, quando `auth.role() === null` (anônimo), redireciona direto para `/entrar` com `returnUrl` — em vez de cair em `/sem-permissao` e só depois ser redirecionado pelo `autenticadoGuard` (o que faria o usuário, após logar, parar em "Sem permissão" em vez da rota pretendida).
 - Erros `422` no registro são distribuídos por um mapa em signal (código do Identity → campo), não por `setErrors` do Reactive Forms.
 - Tema em HEX (exportação padrão do SimUI) — ver `src/styles.css`.
-- Produção assume proxy reverso na mesma origem (`apiUrl: '/tech-curse'`); ajustar `environment.ts` no deploy.
+- A configuração é carregada **antes** do `bootstrapApplication`, com `fetch` e `cache: 'no-store'`, e vira um `InjectionToken`. Assim, todo serviço a lê de forma síncrona (`inject(CONFIGURACAO)`), sem `APP_INITIALIZER` nem estado de "configuração carregando". Sem `config.json` válido, `mostrarErroDeConfiguracao()` troca o `<app-root>` pela mensagem de erro.
+- Funcionalidade desligada some do menu **e** da rota: `pagamentos` tem `canMatch` lendo `pagamentosHabilitados`, então `/aluno/pagamentos` cai em "Página não encontrada" (`WEB-ALU-011`).
 - `SILENCIAR_ERRO` (`HttpContextToken` do `erroInterceptor`): a requisição converte o erro para `ErroApi` mas não mostra toast. Usado pelo `/Student/me`, cujo 404 é o estado "perfil pendente".
 - Erros de `httpResource` podem chegar embrulhados (`cause`); leia com `extrairErroApi`.
 - Estado de listas (página, ordem, categoria) fica na query string e chega aos componentes como inputs (`withComponentInputBinding`).

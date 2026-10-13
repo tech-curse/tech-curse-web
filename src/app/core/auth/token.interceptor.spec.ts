@@ -3,10 +3,12 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { CONFIGURACAO } from '../configuracao/configuracao';
 import { erroInterceptor } from '../http/erro.interceptor';
 import { CHAVE_SESSAO, Sessao, gravarSessao, lerSessao } from './sessao';
 import { tokenInterceptor } from './token.interceptor';
+
+const API = '/tech-curse';
 
 const sessaoAntiga: Sessao = {
   accessToken: 'access-antigo',
@@ -38,6 +40,7 @@ describe('tokenInterceptor', () => {
         provideRouter([{ path: '**', children: [] }]),
         provideHttpClient(withInterceptors([erroInterceptor, tokenInterceptor])),
         provideHttpClientTesting(),
+        { provide: CONFIGURACAO, useValue: { apiUrl: API, pagamentosHabilitados: true } },
       ],
     });
     http = TestBed.inject(HttpClient);
@@ -53,7 +56,7 @@ describe('tokenInterceptor', () => {
 
   async function renovacaoAceita(): Promise<void> {
     await proximoCiclo();
-    const renovacao = api.expectOne(`${environment.apiUrl}/Auth/refresh`);
+    const renovacao = api.expectOne(`${API}/Auth/refresh`);
     expect(renovacao.request.body).toEqual({
       accessToken: sessaoAntiga.accessToken,
       refreshToken: sessaoAntiga.refreshToken,
@@ -63,10 +66,10 @@ describe('tokenInterceptor', () => {
   }
 
   it('WEB-AUTH-010: requisição à API leva o token; para outro endereço, não', async () => {
-    const daApi = firstValueFrom(http.get(`${environment.apiUrl}/Course`));
+    const daApi = firstValueFrom(http.get(`${API}/Course`));
     const deFora = firstValueFrom(http.get('https://outro.exemplo.com/recurso'));
 
-    const paraApi = api.expectOne(`${environment.apiUrl}/Course`);
+    const paraApi = api.expectOne(`${API}/Course`);
     const paraFora = api.expectOne('https://outro.exemplo.com/recurso');
     expect(paraApi.request.headers.get('Authorization')).toBe('Bearer access-antigo');
     expect(paraFora.request.headers.has('Authorization')).toBe(false);
@@ -76,11 +79,11 @@ describe('tokenInterceptor', () => {
   });
 
   it('WEB-AUTH-011: 401 renova a sessão uma vez e repete a requisição com o token novo', async () => {
-    const resposta = firstValueFrom(http.get(`${environment.apiUrl}/Student/me`));
+    const resposta = firstValueFrom(http.get(`${API}/Student/me`));
 
-    api.expectOne(`${environment.apiUrl}/Student/me`).flush(null, naoAutorizado);
+    api.expectOne(`${API}/Student/me`).flush(null, naoAutorizado);
     await renovacaoAceita();
-    const repeticao = api.expectOne(`${environment.apiUrl}/Student/me`);
+    const repeticao = api.expectOne(`${API}/Student/me`);
     expect(repeticao.request.headers.get('Authorization')).toBe('Bearer access-novo');
     repeticao.flush({ id: 7 });
 
@@ -90,14 +93,14 @@ describe('tokenInterceptor', () => {
 
   it('WEB-AUTH-012: três 401 ao mesmo tempo geram uma única renovação', async () => {
     const rotas = ['/Course', '/Student/me', '/Payment/student/7'];
-    const respostas = rotas.map((rota) => firstValueFrom(http.get(`${environment.apiUrl}${rota}`)));
+    const respostas = rotas.map((rota) => firstValueFrom(http.get(`${API}${rota}`)));
 
     for (const rota of rotas) {
-      api.expectOne(`${environment.apiUrl}${rota}`).flush(null, naoAutorizado);
+      api.expectOne(`${API}${rota}`).flush(null, naoAutorizado);
     }
     await renovacaoAceita();
     for (const rota of rotas) {
-      const repeticao = api.expectOne(`${environment.apiUrl}${rota}`);
+      const repeticao = api.expectOne(`${API}${rota}`);
       expect(repeticao.request.headers.get('Authorization')).toBe('Bearer access-novo');
       repeticao.flush({ rota });
     }
@@ -108,11 +111,11 @@ describe('tokenInterceptor', () => {
   it('WEB-AUTH-013: renovação que falha apaga a sessão e leva ao login com returnUrl', async () => {
     await router.navigateByUrl('/cursos/3');
     const navegar = vi.spyOn(router, 'navigate');
-    const resposta = firstValueFrom(http.get(`${environment.apiUrl}/Course/3`));
+    const resposta = firstValueFrom(http.get(`${API}/Course/3`));
 
-    api.expectOne(`${environment.apiUrl}/Course/3`).flush(null, naoAutorizado);
+    api.expectOne(`${API}/Course/3`).flush(null, naoAutorizado);
     await proximoCiclo();
-    api.expectOne(`${environment.apiUrl}/Auth/refresh`).flush(null, naoAutorizado);
+    api.expectOne(`${API}/Auth/refresh`).flush(null, naoAutorizado);
 
     await expect(resposta).rejects.toMatchObject({ status: 401 });
     expect(localStorage.getItem(CHAVE_SESSAO)).toBeNull();
@@ -122,11 +125,11 @@ describe('tokenInterceptor', () => {
   it('WEB-AUTH-013: na página inicial, o login não leva returnUrl', async () => {
     await router.navigateByUrl('/');
     const navegar = vi.spyOn(router, 'navigate');
-    const resposta = firstValueFrom(http.get(`${environment.apiUrl}/Course`));
+    const resposta = firstValueFrom(http.get(`${API}/Course`));
 
-    api.expectOne(`${environment.apiUrl}/Course`).flush(null, naoAutorizado);
+    api.expectOne(`${API}/Course`).flush(null, naoAutorizado);
     await proximoCiclo();
-    api.expectOne(`${environment.apiUrl}/Auth/refresh`).flush(null, naoAutorizado);
+    api.expectOne(`${API}/Auth/refresh`).flush(null, naoAutorizado);
 
     await expect(resposta).rejects.toMatchObject({ status: 401 });
     expect(navegar).toHaveBeenCalledWith(['/entrar'], {});
@@ -134,13 +137,13 @@ describe('tokenInterceptor', () => {
 
   it('WEB-AUTH-014: rotas de autenticação não disparam renovação', async () => {
     for (const rota of ['/Auth/login', '/Auth/register', '/Auth/refresh']) {
-      const resposta = firstValueFrom(http.post(`${environment.apiUrl}${rota}`, {}));
+      const resposta = firstValueFrom(http.post(`${API}${rota}`, {}));
 
-      api.expectOne(`${environment.apiUrl}${rota}`).flush(null, naoAutorizado);
+      api.expectOne(`${API}${rota}`).flush(null, naoAutorizado);
 
       await expect(resposta).rejects.toMatchObject({ status: 401 });
       await proximoCiclo();
-      api.expectNone(`${environment.apiUrl}/Auth/refresh`);
+      api.expectNone(`${API}/Auth/refresh`);
     }
     expect(lerSessao()).toEqual(sessaoAntiga);
   });

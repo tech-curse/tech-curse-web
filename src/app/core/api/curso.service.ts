@@ -1,6 +1,6 @@
 import { HttpResourceRef, httpResource } from '@angular/common/http';
-import { Injectable, Signal } from '@angular/core';
-import { environment } from '../../../environments/environment';
+import { Injectable, Signal, inject } from '@angular/core';
+import { CONFIGURACAO } from '../configuracao/configuracao';
 import { Curso } from './modelos/curso';
 import { ParametrosPaginacao, ResultadoPaginado } from './modelos/paginacao';
 
@@ -26,6 +26,8 @@ export type ParametrosCatalogo = ParametrosPaginacao & {
 
 @Injectable({ providedIn: 'root' })
 export class CursoService {
+  private readonly apiUrl = inject(CONFIGURACAO).apiUrl;
+
   listar(
     parametros: Signal<ParametrosCatalogo>,
   ): HttpResourceRef<ResultadoPaginado<Curso> | undefined> {
@@ -39,14 +41,14 @@ export class CursoService {
         SortDirection: ordenacao.sortDirection,
       };
       if (categoria) params['Categoria'] = categoria;
-      return { url: `${environment.apiUrl}/Course`, params };
+      return { url: `${this.apiUrl}/Course`, params };
     });
   }
 
   obter(id: Signal<number | null>): HttpResourceRef<Curso | undefined> {
     return httpResource<Curso>(() => {
       const valor = id();
-      return valor === null ? undefined : `${environment.apiUrl}/Course/${valor}`;
+      return valor === null ? undefined : `${this.apiUrl}/Course/${valor}`;
     });
   }
 }

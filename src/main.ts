@@ -1,5 +1,19 @@
 import { bootstrapApplication } from '@angular/platform-browser';
-import { appConfig } from './app/app.config';
 import { App } from './app/app';
+import { appConfig } from './app/app.config';
+import {
+  CONFIGURACAO,
+  carregarConfiguracao,
+  mostrarErroDeConfiguracao,
+} from './app/core/configuracao/configuracao';
 
-bootstrapApplication(App, appConfig).catch((err) => console.error(err));
+void carregarConfiguracao().then((configuracao) => {
+  if (!configuracao) {
+    mostrarErroDeConfiguracao();
+    return;
+  }
+  bootstrapApplication(App, {
+    ...appConfig,
+    providers: [...appConfig.providers, { provide: CONFIGURACAO, useValue: configuracao }],
+  }).catch((err) => console.error(err));
+});

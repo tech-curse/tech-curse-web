@@ -8,14 +8,14 @@ Legenda: ✅ atendido · ⚠️ atendido em parte · ❌ não atendido · — n�
 | --- | --- | --- | --- | --- |
 | **I. Base de código** | ✅ | Um repositório (`tech-curse/tech-curse-web`) e uma imagem por versão, usada em staging e em produção | | |
 | **II. Dependências** | ✅ | `package-lock.json` instalado com `npm ci`; Node fixo no `.nvmrc` | | |
-| **III. Configuração** | ❌ | | O endereço da API é fixado no build (`src/environments/`), então cada ambiente exige um build diferente | `WEB-NAV-010` (Fase 4); estrutura em [`configuracao.md`](configuracao.md) |
-| **IV. Serviços de apoio** | ⚠️ | A API é o único serviço de apoio, acessada por URL | A URL vem do build. O alvo: a API na mesma origem do front em todo ambiente ([`configuracao.md`](configuracao.md)) | `WEB-NAV-010` (Fase 4) |
-| **V. Build, release, run** | ❌ | | Um build por ambiente. O alvo: build único na imagem; a release junta a imagem com o `config.json` do ambiente | `WEB-NAV-010` (Fase 4); deploy na Fase 7 |
+| **III. Configuração** | ✅ | O endereço da API e as funcionalidades ligadas vêm do `config.json`, lido em runtime; um build só para todos os ambientes (`WEB-NAV-010`). Estrutura em [`configuracao.md`](configuracao.md) | | |
+| **IV. Serviços de apoio** | ✅ | A API é o único serviço de apoio, na mesma origem do front em todo ambiente (proxy do `ng serve` em desenvolvimento, Nginx do host nos ambientes reais); o caminho vem do `config.json` | | |
+| **V. Build, release, run** | ⚠️ | Um build só; o `config.json` é a parte da release | A imagem que junta o build com o `config.json` do ambiente | Fase 4 (imagem); deploy na Fase 7 |
 | **VI. Processos** | ✅ | Arquivos estáticos; a sessão vive no navegador (`WEB-AUTH`), nada fica no servidor | | |
 | **VII. Vínculo de porta** | ⚠️ | | A imagem precisa servir os arquivos pelo próprio Nginx, numa porta sem privilégio, com usuário não root; o Nginx do host só roteia | Fase 4 |
 | **VIII. Concorrência** | ✅ | Sem estado, qualquer número de réplicas atende igual | | |
 | **IX. Descartabilidade** | ⚠️ | | O Nginx da imagem precisa encerrar com `SIGQUIT` (fim gracioso) e ter healthcheck | Fase 4 |
-| **X. Paridade dev/prod** | ⚠️ | O mesmo código nos dois ambientes. Os testes end-to-end rodam contra o build de produção (`ng serve --configuration production`), com a API na mesma origem | Em desenvolvimento, o `ng serve` ainda chama a API em outra origem (`localhost:5130`); o proxy de desenvolvimento a coloca na mesma origem | Fase 4 (proxy) |
+| **X. Paridade dev/prod** | ✅ | O mesmo código e a API na mesma origem em todo ambiente: proxy do `ng serve` em desenvolvimento, Nginx nos ambientes reais. Os testes end-to-end rodam contra o build de produção | | |
 | **XI. Logs** | ⚠️ | | O Nginx da imagem deve escrever o log de acesso e o de erro no stdout e no stderr; a coleta é do ambiente | Fase 4 (contêiner); Fase 8 (coleta) |
 | **XII. Processos administrativos** | — | Não há tarefa administrativa no front-end | | |
 
