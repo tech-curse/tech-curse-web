@@ -104,7 +104,7 @@ Mostrar os cursos disponíveis, deixar a pessoa ordenar, filtrar e navegar pelas
 *Dado* um aluno cujo perfil está carregando, com erro ou pendente
 *Então* o botão `"Matricular-me"` fica desabilitado
 *E* no estado pendente aparece o aviso definido em `WEB-ALU-002`
-**Status:** implementado (o texto do aviso é divergente; ver `WEB-ALU-002`)
+**Status:** implementado
 
 **WEB-CAT-015: Só aluno vê a área de matrícula**
 *Dado* um `Admin` ou `Instructor` no detalhe de um curso
