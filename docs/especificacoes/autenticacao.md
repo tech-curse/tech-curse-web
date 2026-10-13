@@ -49,7 +49,7 @@ Deixar a pessoa criar a conta, entrar e continuar logada enquanto a sessão for 
 **Status:** implementado
 
 **WEB-AUTH-006: O formulário de registro valida antes de chamar a API**
-*Quando* um campo obrigatório está vazio, o e-mail é inválido, a senha não atende à política (`"Mínimo de 8 caracteres com maiúscula, minúscula, número e símbolo."`) ou a confirmação é diferente (`"As senhas não coincidem."`)
+*Quando* um campo obrigatório está vazio, o e-mail é inválido, a senha não atende à política (`"De 12 a 128 caracteres, com maiúscula, minúscula, número e símbolo."`) ou a confirmação é diferente (`"As senhas não coincidem."`)
 *Então* o campo mostra o erro e nenhuma requisição é feita
 **Status:** implementado
 
