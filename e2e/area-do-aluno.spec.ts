@@ -233,7 +233,7 @@ test.describe('perfil', () => {
 
     await page.goto('/aluno/perfil');
 
-    await expect(page.getByText(PERFIL.email)).toBeVisible();
+    await expect(page.locator('dd').nth(0)).toHaveText(PERFIL.email);
     await expect(page.locator('dd').nth(1)).toHaveText('16/03/2026');
     await expect(page.getByText('Aluno desde')).toBeVisible();
     await expect(page.getByLabel('Nome')).toHaveValue(PERFIL.nome);

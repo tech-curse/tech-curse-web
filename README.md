@@ -32,6 +32,17 @@ Abra http://localhost:4200, crie uma conta de aluno em `/registrar` e entre em `
 
 O `npm start` encaminha `/tech-curse` para a API em `http://localhost:5130` (`proxy.conf.json`), então o navegador fala com a API na mesma origem do front, como em produção. O `public/config.json` fica fora do git.
 
+### Em contêiner
+
+A imagem serve o build de produção pelo Nginx, na porta `8080`, e gera o `config.json` a partir de variáveis de ambiente (lista no `.env.example`):
+
+```bash
+docker build -t tech-curse-web:dev .
+docker run --rm -p 127.0.0.1:8081:8080 -e PAGAMENTOS_HABILITADOS=true tech-curse-web:dev
+```
+
+Abra http://localhost:8081. Sozinha, a imagem não alcança a API: em staging e em produção, o Nginx do host encaminha `/tech-curse` para ela. Para conferir a imagem como o CI confere: `./scripts/verificar-conteiner.sh`.
+
 ## Como testar
 
 ```bash
