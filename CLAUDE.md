@@ -69,6 +69,8 @@ Configuração do Nginx em `nginx/`:
 
 O job `e2e` do CI constrói a imagem, roda `scripts/verificar-conteiner.sh` e executa os testes end-to-end **contra o contêiner** (`E2E_URL`), não contra o `ng serve`. Localmente, `npm run e2e` continua subindo o `ng serve --configuration production`; com `E2E_URL` definido, o Playwright usa o endereço dado e não sobe servidor.
 
+**Publicação** (job `publicar`, só em push, depois de `ci` e `e2e` passarem): `ghcr.io/tech-curse/tech-curse-web`, com o `GITHUB_TOKEN` do workflow. Push na `main` gera `sha-<commit curto>` (staging, Fase 7) e tag `vX.Y.Z` gera `X.Y.Z` (produção); **nunca `latest`**. Numa tag, o job falha se ela não bater com o `version` do `package.json`; suba a versão num PR antes de criar a tag. A imagem sai com SBOM e atestação de proveniência (`gh attestation verify oci://ghcr.io/tech-curse/tech-curse-web:<tag> --owner tech-curse`). O `publicar` reconstrói a partir do cache do Buildx gravado pelo `e2e`: as camadas são as testadas, mas não é o mesmo artefato byte a byte.
+
 No Git Bash do Windows, `docker run -e API_URL=/tech-curse` vira `C:/Program Files/Git/tech-curse` pela conversão de caminhos do MSYS. O script de verificação exporta `MSYS_NO_PATHCONV=1`; faça o mesmo ao rodar a imagem à mão.
 
 ## Testes
