@@ -1,7 +1,6 @@
 import { expect, test } from './apoio/teste';
 import {
   ApiFalsa,
-  CHAVE_SESSAO,
   PERFIL,
   Papel,
   alunoComPerfil,
@@ -83,7 +82,7 @@ for (const [papel, destinos] of [
   });
 }
 
-test('WEB-AUTH-019: sair apaga a sessão e leva ao login', async ({ page }) => {
+test('WEB-AUTH-019: sair encerra a sessão na API e leva ao login', async ({ page }) => {
   const api = await alunoComPerfil(page);
   api.quando('GET', '/Course', { corpo: paginaDe([cursoFalso(1)]) });
   await page.goto('/cursos');
@@ -92,7 +91,9 @@ test('WEB-AUTH-019: sair apaga a sessão e leva ao login', async ({ page }) => {
   await page.locator('[data-teste="sair"]').click();
 
   await expect(page).toHaveURL(/\/entrar$/);
-  expect(await page.evaluate((chave) => localStorage.getItem(chave), CHAVE_SESSAO)).toBeNull();
+  expect(api.chamadas('POST', '/Auth/logout')).toHaveLength(1);
+  await page.goto('/cursos');
+  await expect(page).toHaveURL(/\/entrar\?returnUrl=%2Fcursos$/);
 });
 
 test.describe('tela estreita', () => {
@@ -237,7 +238,7 @@ test.describe('configuração em runtime', () => {
       await page.getByRole('button', { name: 'Entrar' }).click();
 
       await expect(page.getByRole('alert')).toHaveText('E-mail ou senha incorretos.');
-      expect(caminhos).toEqual(['/outra-api/Auth/login']);
+      expect(caminhos).toEqual(['/outra-api/Auth/refresh', '/outra-api/Auth/login']);
     });
   });
 

@@ -5,7 +5,7 @@ import { catchError, from, switchMap, throwError } from 'rxjs';
 import { CONFIGURACAO } from '../configuracao/configuracao';
 import { AutenticacaoService } from './autenticacao.service';
 
-const ROTAS_SEM_RETRY = /\/Auth\/(login|register|refresh)$/;
+const ROTAS_SEM_RETRY = /\/Auth\/(login|register|refresh|logout)$/;
 
 function comToken<T>(req: HttpRequest<T>, token: string | null): HttpRequest<T> {
   return token ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
@@ -24,7 +24,7 @@ export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
 
       return from(auth.renovar()).pipe(
         catchError(() => {
-          auth.sair(router.url === '/' ? undefined : router.url);
+          void auth.sair(router.url === '/' ? undefined : router.url);
           return throwError(() => erro);
         }),
         switchMap(() => next(comToken(req, auth.accessToken()))),

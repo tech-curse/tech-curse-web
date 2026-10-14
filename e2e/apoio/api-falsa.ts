@@ -17,8 +17,6 @@ interface RotaFalsa {
   atendimento: Atendimento;
 }
 
-export const CHAVE_SESSAO = 'tech-curse.sessao';
-
 const PREFIXO = '/tech-curse';
 
 function base64url(valor: unknown): string {
@@ -33,24 +31,14 @@ export function tokenDe(papel: Papel, email = `${papel.toLowerCase()}@teste.com`
 export function sessaoDe(papel: Papel, expiraEmMs = 60 * 60 * 1000) {
   return {
     accessToken: tokenDe(papel),
-    refreshToken: `refresh-${papel.toLowerCase()}`,
     expiresAt: new Date(Date.now() + expiraEmMs).toISOString(),
   };
 }
 
-export async function gravarSessaoAntesDeAbrir(page: Page, sessao: unknown): Promise<void> {
-  await page.addInitScript(
-    ([chave, valor]) => {
-      if (sessionStorage.getItem('e2e.sessao-gravada')) return;
-      sessionStorage.setItem('e2e.sessao-gravada', '1');
-      localStorage.setItem(chave, valor);
-    },
-    [CHAVE_SESSAO, JSON.stringify(sessao)],
-  );
-}
+const papeisDasPaginas = new WeakMap<Page, Papel>();
 
 export async function entrarComo(page: Page, papel: Papel): Promise<void> {
-  await gravarSessaoAntesDeAbrir(page, sessaoDe(papel));
+  papeisDasPaginas.set(page, papel);
 }
 
 export function problema(
@@ -82,6 +70,17 @@ export class ApiFalsa {
 
   static async em(page: Page): Promise<ApiFalsa> {
     const api = new ApiFalsa();
+    const papel = papeisDasPaginas.get(page);
+    api
+      .quando(
+        'POST',
+        '/Auth/refresh',
+        papel ? { corpo: sessaoDe(papel) } : problema(401, 'Refresh Token inválido ou expirado.'),
+      )
+      .quando('POST', '/Auth/logout', () => {
+        api.quando('POST', '/Auth/refresh', problema(401, 'Refresh Token inválido ou expirado.'));
+        return { status: 204 };
+      });
     await page.route(`**${PREFIXO}/**`, (rota) => api.atender(rota));
     return api;
   }

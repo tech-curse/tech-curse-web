@@ -12,12 +12,13 @@ import { AutenticacaoService } from './autenticacao.service';
 import { Role } from './jwt';
 
 export function roleGuard(roles: Role[]): CanActivateFn & CanMatchFn {
-  return (
+  return async (
     _rotaOuRoute: ActivatedRouteSnapshot | Route,
     segmentosOuEstado: UrlSegment[] | RouterStateSnapshot,
   ) => {
     const auth = inject(AutenticacaoService);
     const router = inject(Router);
+    await auth.garantirSessao();
     const atual = auth.role();
 
     if (atual === null) {
