@@ -112,12 +112,12 @@ describe('tokenInterceptor', () => {
   it('WEB-AUTH-013: renovação que falha encerra a sessão e leva ao login com returnUrl', async () => {
     await router.navigateByUrl('/cursos/3');
     const navegar = vi.spyOn(router, 'navigate');
-    const resposta = firstValueFrom(http.get(`${API}/Course/3`));
+    const resposta = firstValueFrom(http.get(`${API}/Course/3`)).catch((erro: unknown) => erro);
 
     api.expectOne(`${API}/Course/3`).flush(null, naoAutorizado);
     await renovacaoRecusadaESaida();
 
-    await expect(resposta).rejects.toMatchObject({ status: 401 });
+    expect(await resposta).toMatchObject({ status: 401 });
     expect(auth.accessToken()).toBeNull();
     expect(navegar).toHaveBeenCalledWith(['/entrar'], { queryParams: { returnUrl: '/cursos/3' } });
   });
@@ -125,12 +125,12 @@ describe('tokenInterceptor', () => {
   it('WEB-AUTH-013: na página inicial, o login não leva returnUrl', async () => {
     await router.navigateByUrl('/');
     const navegar = vi.spyOn(router, 'navigate');
-    const resposta = firstValueFrom(http.get(`${API}/Course`));
+    const resposta = firstValueFrom(http.get(`${API}/Course`)).catch((erro: unknown) => erro);
 
     api.expectOne(`${API}/Course`).flush(null, naoAutorizado);
     await renovacaoRecusadaESaida();
 
-    await expect(resposta).rejects.toMatchObject({ status: 401 });
+    expect(await resposta).toMatchObject({ status: 401 });
     expect(navegar).toHaveBeenCalledWith(['/entrar'], {});
   });
 
