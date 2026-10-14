@@ -42,5 +42,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Segurança
 
+- Nenhum token no armazenamento do navegador: o access token fica só na memória da aba, e o refresh token, no cookie `HttpOnly` da API. Recarregar a página restaura a sessão por `POST /Auth/refresh`, e a chave antiga `tech-curse.sessao` é apagada (`WEB-AUTH-022`).
+- Sair chama o logout da API, que revoga a sessão no servidor (`WEB-AUTH-020`).
+- A renovação da sessão passa por uma trava entre abas (Web Locks API), para duas abas não apresentarem o mesmo refresh token, o que a API trataria como reuso (`WEB-AUTH-023`).
 - Angular atualizado de 22.1 para 22.2 (`ng update`): corrige o alerta alto do `@angular/router` (DoS em SSR, recurso que o projeto não usa) e o crítico do `piscina`, dependência do `@angular/build`.
 - Dependências transitivas de desenvolvimento corrigidas: `source-map-js`, `smol-toml` e `brace-expansion` atualizados; `axios` e `@modelcontextprotocol/sdk` saíram da árvore.

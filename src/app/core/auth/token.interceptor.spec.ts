@@ -5,24 +5,16 @@ import { Router, provideRouter } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { CONFIGURACAO } from '../configuracao/configuracao';
 import { erroInterceptor } from '../http/erro.interceptor';
-import { CHAVE_SESSAO, Sessao, gravarSessao, lerSessao } from './sessao';
+import { AutenticacaoService } from './autenticacao.service';
 import { tokenInterceptor } from './token.interceptor';
 
 const API = '/tech-curse';
 
-const sessaoAntiga: Sessao = {
-  accessToken: 'access-antigo',
-  refreshToken: 'refresh-antigo',
-  expiresAt: '2099-01-01T00:00:00Z',
-};
-
-const sessaoNova: Sessao = {
-  accessToken: 'access-novo',
-  refreshToken: 'refresh-novo',
-  expiresAt: '2099-01-02T00:00:00Z',
-};
+const sessaoAntiga = { accessToken: 'access-antigo', expiresAt: '2099-01-01T00:00:00Z' };
+const sessaoNova = { accessToken: 'access-novo', expiresAt: '2099-01-02T00:00:00Z' };
 
 const naoAutorizado = { status: 401, statusText: 'Unauthorized' };
+const semConteudo = { status: 204, statusText: 'No Content' };
 
 function proximoCiclo(): Promise<void> {
   return new Promise((resolver) => setTimeout(resolver));
@@ -32,9 +24,9 @@ describe('tokenInterceptor', () => {
   let http: HttpClient;
   let api: HttpTestingController;
   let router: Router;
+  let auth: AutenticacaoService;
 
-  beforeEach(() => {
-    gravarSessao(sessaoAntiga);
+  beforeEach(async () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([{ path: '**', children: [] }]),
@@ -46,22 +38,31 @@ describe('tokenInterceptor', () => {
     http = TestBed.inject(HttpClient);
     api = TestBed.inject(HttpTestingController);
     router = TestBed.inject(Router);
+    auth = TestBed.inject(AutenticacaoService);
+    const entrada = auth.entrar('aluno@teste.com', 'Senha@Forte1');
+    api.expectOne(`${API}/Auth/login`).flush(sessaoAntiga);
+    await entrada;
   });
 
   afterEach(() => {
     api.verify();
-    localStorage.clear();
     vi.restoreAllMocks();
   });
 
   async function renovacaoAceita(): Promise<void> {
     await proximoCiclo();
     const renovacao = api.expectOne(`${API}/Auth/refresh`);
-    expect(renovacao.request.body).toEqual({
-      accessToken: sessaoAntiga.accessToken,
-      refreshToken: sessaoAntiga.refreshToken,
-    });
+    expect(renovacao.request.method).toBe('POST');
+    expect(renovacao.request.body).toBeNull();
     renovacao.flush(sessaoNova);
+    await proximoCiclo();
+  }
+
+  async function renovacaoRecusadaESaida(): Promise<void> {
+    await proximoCiclo();
+    api.expectOne(`${API}/Auth/refresh`).flush(null, naoAutorizado);
+    await proximoCiclo();
+    api.expectOne(`${API}/Auth/logout`).flush(null, semConteudo);
     await proximoCiclo();
   }
 
@@ -78,7 +79,7 @@ describe('tokenInterceptor', () => {
     await Promise.all([daApi, deFora]);
   });
 
-  it('WEB-AUTH-011: 401 renova a sessão uma vez e repete a requisição com o token novo', async () => {
+  it('WEB-AUTH-011: 401 renova a sessão pelo cookie e repete a requisição com o token novo', async () => {
     const resposta = firstValueFrom(http.get(`${API}/Student/me`));
 
     api.expectOne(`${API}/Student/me`).flush(null, naoAutorizado);
@@ -88,7 +89,7 @@ describe('tokenInterceptor', () => {
     repeticao.flush({ id: 7 });
 
     expect(await resposta).toEqual({ id: 7 });
-    expect(lerSessao()).toEqual(sessaoNova);
+    expect(auth.accessToken()).toBe('access-novo');
   });
 
   it('WEB-AUTH-012: três 401 ao mesmo tempo geram uma única renovação', async () => {
@@ -108,17 +109,16 @@ describe('tokenInterceptor', () => {
     expect(await Promise.all(respostas)).toEqual(rotas.map((rota) => ({ rota })));
   });
 
-  it('WEB-AUTH-013: renovação que falha apaga a sessão e leva ao login com returnUrl', async () => {
+  it('WEB-AUTH-013: renovação que falha encerra a sessão e leva ao login com returnUrl', async () => {
     await router.navigateByUrl('/cursos/3');
     const navegar = vi.spyOn(router, 'navigate');
     const resposta = firstValueFrom(http.get(`${API}/Course/3`));
 
     api.expectOne(`${API}/Course/3`).flush(null, naoAutorizado);
-    await proximoCiclo();
-    api.expectOne(`${API}/Auth/refresh`).flush(null, naoAutorizado);
+    await renovacaoRecusadaESaida();
 
     await expect(resposta).rejects.toMatchObject({ status: 401 });
-    expect(localStorage.getItem(CHAVE_SESSAO)).toBeNull();
+    expect(auth.accessToken()).toBeNull();
     expect(navegar).toHaveBeenCalledWith(['/entrar'], { queryParams: { returnUrl: '/cursos/3' } });
   });
 
@@ -128,15 +128,14 @@ describe('tokenInterceptor', () => {
     const resposta = firstValueFrom(http.get(`${API}/Course`));
 
     api.expectOne(`${API}/Course`).flush(null, naoAutorizado);
-    await proximoCiclo();
-    api.expectOne(`${API}/Auth/refresh`).flush(null, naoAutorizado);
+    await renovacaoRecusadaESaida();
 
     await expect(resposta).rejects.toMatchObject({ status: 401 });
     expect(navegar).toHaveBeenCalledWith(['/entrar'], {});
   });
 
   it('WEB-AUTH-014: rotas de autenticação não disparam renovação', async () => {
-    for (const rota of ['/Auth/login', '/Auth/register', '/Auth/refresh']) {
+    for (const rota of ['/Auth/login', '/Auth/register', '/Auth/refresh', '/Auth/logout']) {
       const resposta = firstValueFrom(http.post(`${API}${rota}`, {}));
 
       api.expectOne(`${API}${rota}`).flush(null, naoAutorizado);
@@ -145,6 +144,6 @@ describe('tokenInterceptor', () => {
       await proximoCiclo();
       api.expectNone(`${API}/Auth/refresh`);
     }
-    expect(lerSessao()).toEqual(sessaoAntiga);
+    expect(auth.accessToken()).toBe('access-antigo');
   });
 });

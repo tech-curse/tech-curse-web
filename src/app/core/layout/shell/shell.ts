@@ -42,6 +42,6 @@ export class ShellComponent {
   }
 
   protected sair(): void {
-    this.auth.sair();
+    void this.auth.sair();
   }
 }

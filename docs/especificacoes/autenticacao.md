@@ -6,11 +6,11 @@ Deixar a pessoa criar a conta, entrar e continuar logada enquanto a sessão for 
 
 ## Regras
 
-1. A sessão é o par de tokens da API (`AUTH-014`) mais o `expiresAt` do access token.
-2. A sessão fica no `localStorage`, na chave `tech-curse.sessao`, para sobreviver a recarregar a página. Se o `localStorage` não estiver disponível, a sessão vive só na memória da aba.
+1. A sessão tem duas partes: o access token, com o `expiresAt`, que o app guarda **só na memória da aba**, e o refresh token, que fica no cookie `HttpOnly` da API (`AUTH-034`) e que o JavaScript nunca vê.
+2. Nenhum token vai para o `localStorage` nem para o `sessionStorage`. Ao recarregar a página, o app recupera o access token com um `POST /Auth/refresh`, que leva o cookie sozinho. A chave `tech-curse.sessao`, de versões anteriores, é apagada quando o app abre.
 3. Identidade e papel vêm das claims do access token (`AUTH-015`); o front não consulta a API para saber quem está logado.
 4. Toda requisição para a API leva `Authorization: Bearer <access token>`. Requisições para outros endereços não levam token.
-5. Um `401` numa requisição autenticada provoca **uma** tentativa de renovação (`AUTH-023`). Se a renovação falhar, a sessão é encerrada.
+5. Um `401` numa requisição autenticada provoca **uma** tentativa de renovação (`AUTH-023`). Se a renovação falhar, a sessão é encerrada. A renovação nunca mostra notificação de erro: quem não tem sessão vai para o login.
 6. Depois de entrar, a pessoa vai para a página que tentava abrir (`returnUrl`) ou, sem ela, para a página inicial do papel: `/cursos` para `Student`; `/admin` para `Admin` e `Instructor`.
 
 ## Cenários
@@ -20,7 +20,7 @@ Deixar a pessoa criar a conta, entrar e continuar logada enquanto a sessão for 
 **WEB-AUTH-001: Entrar com credenciais válidas**
 *Dado* um usuário cadastrado na tela `/entrar`
 *Quando* ele preenche e-mail e senha corretos e envia
-*Então* a sessão é gravada em `tech-curse.sessao`
+*Então* o access token fica na memória da aba, e o refresh token, no cookie da API
 *E* ele vai para o `returnUrl`, se houver, ou para a página inicial do papel
 **Status:** implementado
 
@@ -94,29 +94,29 @@ Deixar a pessoa criar a conta, entrar e continuar logada enquanto a sessão for 
 
 **WEB-AUTH-013: Renovação que falha encerra a sessão**
 *Quando* o `POST /Auth/refresh` falha
-*Então* a sessão é apagada e a pessoa vai para `/entrar?returnUrl=<página atual>`
+*Então* a sessão é encerrada (`WEB-AUTH-019`) e a pessoa vai para `/entrar?returnUrl=<página atual>`
 *E* na página inicial (`/`), vai para `/entrar` sem `returnUrl`
 **Status:** implementado
 
 **WEB-AUTH-014: Rotas de autenticação não disparam renovação**
-*Quando* `POST /Auth/login`, `POST /Auth/register` ou `POST /Auth/refresh` recebem `401`
+*Quando* `POST /Auth/login`, `POST /Auth/register`, `POST /Auth/refresh` ou `POST /Auth/logout` recebem `401`
 *Então* o erro vai direto para quem chamou, sem tentar renovar
 **Status:** implementado
 
-**WEB-AUTH-015: Abrir o app com access token vencido renova antes de entrar**
-*Dado* uma sessão gravada com o access token vencido e o refresh token válido
-*Quando* a pessoa abre uma página protegida
-*Então* o app renova a sessão antes de mostrar a página, sem passar pelo login
-*E* se a renovação falhar, a sessão é apagada e a pessoa vai para `/entrar?returnUrl=<página pedida>`
+**WEB-AUTH-015: Abrir o app com sessão na API restaura o acesso antes de entrar**
+*Dado* um cookie de sessão válido na API, sem access token na memória (página recarregada ou aba nova)
+*Quando* a pessoa abre qualquer página
+*Então* o app faz **um** `POST /Auth/refresh` antes de decidir a rota e mostra a página sem passar pelo login
+*E* se a API responder que não há sessão, a pessoa vai para `/entrar?returnUrl=<página pedida>`, sem notificação, e o app não tenta de novo até o próximo login
 **Status:** implementado
 
-### Sessão gravada
+### Sessão no navegador
 
 **WEB-AUTH-016: Sessão corrompida vale como ausência de sessão**
 *Dado* um valor em `tech-curse.sessao` que não é JSON, ou sem `accessToken`, `refreshToken` ou `expiresAt`
 *Quando* o app abre
 *Então* ele se comporta como se ninguém estivesse logado
-**Status:** implementado
+**Status:** removido na Fase 5. O app não lê mais sessão do `localStorage` (`WEB-AUTH-022`).
 
 **WEB-AUTH-017: Token sem papel conhecido não vale como sessão**
 *Dado* um access token sem `nameid`, sem `email` ou com um `role` diferente de `Admin`, `Instructor` e `Student`
@@ -128,19 +128,21 @@ Deixar a pessoa criar a conta, entrar e continuar logada enquanto a sessão for 
 *Dado* um navegador que bloqueia o `localStorage` (navegação privada com armazenamento bloqueado)
 *Quando* a pessoa entra
 *Então* o login funciona e a sessão dura enquanto a aba estiver aberta
-**Status:** implementado
+**Status:** removido na Fase 5. A sessão não depende mais do `localStorage`: o access token vive na memória e o refresh token, no cookie (`WEB-AUTH-022`).
 
 ### Sair e páginas públicas
 
 **WEB-AUTH-019: Sair encerra a sessão**
 *Quando* a pessoa clica em sair
-*Então* `tech-curse.sessao` é apagada e ela vai para `/entrar`
+*Então* o app chama o logout da API, apaga o access token da memória e leva a pessoa para `/entrar`
+*E* abrir uma página protegida depois disso leva ao login
 **Status:** implementado
 
 **WEB-AUTH-020: Sair revoga a sessão também na API**
 *Quando* a pessoa clica em sair
-*Então* o app chama o logout da API (`AUTH-032`) antes de apagar a sessão local
-**Status:** planejado (Fase 5). Hoje o refresh token continua válido na API até vencer.
+*Então* o app chama `POST /Auth/logout` (`AUTH-032`), que revoga a sessão e apaga o cookie, antes de apagar a sessão local
+*E* se o logout falhar (API fora do ar), a sessão local é encerrada assim mesmo
+**Status:** implementado
 
 **WEB-AUTH-021: Quem está logado não vê login nem registro**
 *Dado* uma sessão ativa
@@ -149,8 +151,17 @@ Deixar a pessoa criar a conta, entrar e continuar logada enquanto a sessão for 
 **Status:** implementado
 
 **WEB-AUTH-022: Refresh token fora do alcance do JavaScript**
-*Então* o refresh token não fica no `localStorage`; ele trafega só no cookie `HttpOnly` da API (`AUTH-034`)
-**Status:** planejado (Fase 5)
+*Então* o refresh token trafega só no cookie `HttpOnly` da API (`AUTH-034`), e o access token fica só na memória da aba
+*E* nenhum token aparece no `localStorage` nem no `sessionStorage`, nem depois de recarregar a página
+*E* a chave `tech-curse.sessao`, de versões anteriores, é apagada quando o app abre
+**Status:** implementado
+
+**WEB-AUTH-023: Abas abertas ao mesmo tempo não derrubam a sessão**
+*Dado* duas abas do app que precisam renovar o access token ao mesmo tempo
+*Então* a renovação passa pela trava `tech-curse.renovacao` da Web Locks API: a segunda aba espera a primeira terminar e usa o cookie já trocado
+*E* por isso a API não vê o mesmo refresh token duas vezes, o que ela trataria como reuso e revogaria a sessão (`AUTH-033`)
+*E* num navegador sem a Web Locks API, a renovação acontece sem a trava
+**Status:** implementado
 
 
 ## Fora de escopo

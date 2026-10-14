@@ -2,11 +2,9 @@ import { Page } from '@playwright/test';
 import { expect, servirConfiguracao, test } from './apoio/teste';
 import {
   ApiFalsa,
-  CHAVE_SESSAO,
   PERFIL,
   cursoFalso,
   entrarComo,
-  gravarSessaoAntesDeAbrir,
   paginaDe,
   problema,
   sessaoDe,
@@ -34,9 +32,13 @@ async function preencherRegistro(page: Page): Promise<void> {
   await page.getByLabel('Confirmar senha').fill('Senha@Forte1');
 }
 
-async function sessaoGravada(page: Page): Promise<unknown> {
-  return JSON.parse(
-    (await page.evaluate((chave) => localStorage.getItem(chave), CHAVE_SESSAO)) ?? 'null',
+async function armazenamentoDoNavegador(page: Page): Promise<string> {
+  return page.evaluate(() =>
+    [localStorage, sessionStorage]
+      .flatMap((armazenamento) =>
+        Object.keys(armazenamento).map((chave) => `${chave}=${armazenamento.getItem(chave)}`),
+      )
+      .join(' '),
   );
 }
 
@@ -55,9 +57,10 @@ test('WEB-AUTH-001: login grava a sessão e leva à página inicial do papel ou 
     email: 'student@teste.com',
     password: 'Senha@Forte1',
   });
-  expect(await sessaoGravada(page)).toMatchObject({ refreshToken: 'refresh-student' });
+  expect(await armazenamentoDoNavegador(page)).not.toContain(
+    sessaoDe('Student').accessToken.split('.')[1],
+  );
 
-  await page.evaluate(() => localStorage.clear());
   await page.goto('/cursos/3');
   await expect(page).toHaveURL(/\/entrar\?returnUrl=%2Fcursos%2F3$/);
   await preencherLogin(page);
@@ -89,7 +92,7 @@ test('WEB-AUTH-002: credenciais erradas aparecem no formulário, sem notificaç�
   await expect(page.getByRole('alert')).toHaveText('E-mail ou senha incorretos.');
   await expect(page.locator('[data-sonner-toast]')).toHaveCount(0);
   await expect(page).toHaveURL(/\/entrar$/);
-  expect(api.chamadas('POST', '/Auth/refresh')).toHaveLength(0);
+  expect(api.chamadas('POST', '/Auth/refresh')).toHaveLength(1);
 });
 
 test('WEB-AUTH-004: envio duplo não gera dois logins', async ({ page }) => {
@@ -120,7 +123,6 @@ test('WEB-AUTH-005: registro válido notifica e leva ao login, sem entrar', asyn
   await expect(page.getByText('Conta criada. Entre para continuar.')).toBeVisible();
   await expect(page).toHaveURL(/\/entrar$/);
   expect(api.chamadas('POST', '/Auth/login')).toHaveLength(0);
-  expect(await sessaoGravada(page)).toBeNull();
 });
 
 test('WEB-AUTH-008: erros 422 da API aparecem no campo certo ou como erro geral', async ({
@@ -151,10 +153,11 @@ test('WEB-AUTH-008: erros 422 da API aparecem no campo certo ou como erro geral'
   await expect(page.locator('[data-sonner-toast]')).toHaveCount(0);
 });
 
-test('WEB-AUTH-015: access token vencido é renovado antes de abrir a página', async ({ page }) => {
-  await gravarSessaoAntesDeAbrir(page, sessaoDe('Student', -60_000));
+test('WEB-AUTH-015: com sessão na API, o app restaura o acesso antes de abrir a página', async ({
+  page,
+}) => {
+  await entrarComo(page, 'Student');
   const api = await apiDoAluno(page);
-  api.quando('POST', '/Auth/refresh', { corpo: sessaoDe('Student') });
 
   await page.goto('/cursos/3');
 
@@ -163,15 +166,34 @@ test('WEB-AUTH-015: access token vencido é renovado antes de abrir a página', 
   expect(api.chamadas('POST', '/Auth/refresh')).toHaveLength(1);
 });
 
-test('WEB-AUTH-015: se a renovação falhar, apaga a sessão e vai ao login', async ({ page }) => {
-  await gravarSessaoAntesDeAbrir(page, sessaoDe('Student', -60_000));
+test('WEB-AUTH-015: sem sessão na API, vai ao login sem notificação', async ({ page }) => {
   const api = await ApiFalsa.em(page);
-  api.quando('POST', '/Auth/refresh', problema(401, 'Refresh Token inválido ou expirado.'));
 
   await page.goto('/cursos/3');
 
   await expect(page).toHaveURL(/\/entrar\?returnUrl=%2Fcursos%2F3$/);
-  expect(await sessaoGravada(page)).toBeNull();
+  expect(api.chamadas('POST', '/Auth/refresh')).toHaveLength(1);
+  await expect(page.locator('[data-sonner-toast]')).toHaveCount(0);
+});
+
+test('WEB-AUTH-022: recarregar a página mantém a sessão sem guardar token no navegador', async ({
+  page,
+}) => {
+  const api = await apiDoAluno(page);
+  api.quando('POST', '/Auth/login', { corpo: sessaoDe('Student') });
+  await page.goto('/entrar');
+  await preencherLogin(page);
+  await page.getByRole('button', { name: 'Entrar' }).click();
+  await expect(page).toHaveURL(/\/cursos$/);
+
+  api.quando('POST', '/Auth/refresh', { corpo: sessaoDe('Student') });
+  await page.reload();
+
+  await expect(page).toHaveURL(/\/cursos$/);
+  await expect(page.getByRole('heading', { name: 'Cursos' })).toBeVisible();
+  expect(await armazenamentoDoNavegador(page)).not.toContain(
+    sessaoDe('Student').accessToken.split('.')[1],
+  );
 });
 
 test('WEB-AUTH-021: quem está logado não vê login nem registro', async ({ page, browser }) => {
@@ -194,11 +216,12 @@ test('WEB-AUTH-021: quem está logado não vê login nem registro', async ({ pag
 });
 
 test('WEB-AUTH-003: o formulário de login valida antes de chamar a API', async ({ page }) => {
+  await page.goto('/entrar');
+  await expect(page.getByRole('button', { name: 'Entrar' })).toBeVisible();
   const requisicoes: string[] = [];
   page.on('request', (requisicao) => {
     if (requisicao.url().includes('/tech-curse/')) requisicoes.push(requisicao.url());
   });
-  await page.goto('/entrar');
 
   await page.getByLabel('E-mail').fill('nao-e-um-email');
   await page.getByRole('button', { name: 'Entrar' }).click();
@@ -210,11 +233,12 @@ test('WEB-AUTH-003: o formulário de login valida antes de chamar a API', async 
 test('WEB-AUTH-006: o formulário de registro mostra os erros sem chamar a API', async ({
   page,
 }) => {
+  await page.goto('/registrar');
+  await expect(page.getByRole('button', { name: 'Criar conta' })).toBeVisible();
   const requisicoes: string[] = [];
   page.on('request', (requisicao) => {
     if (requisicao.url().includes('/tech-curse/')) requisicoes.push(requisicao.url());
   });
-  await page.goto('/registrar');
 
   await page.getByLabel('Senha', { exact: true }).fill('fraca');
   await page.getByLabel('Confirmar senha').fill('diferente');

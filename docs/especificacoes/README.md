@@ -32,7 +32,7 @@ Um cenário divergente sempre traz a linha **Hoje:**, com o que o código faz de
 - IDs nunca são reaproveitados nem renumerados. Um cenário que deixa de valer é marcado como **removido**, com o motivo.
 - Textos de tela citados entre aspas são contrato: o teste confere exatamente esse texto.
 - Elementos usados pelos testes têm o atributo `data-teste`; o valor citado num cenário (`data-teste="matricular"`) é contrato.
-- Chaves do `localStorage` citadas entre crases (`tech-curse.sessao`) são contrato.
+- Chaves do `localStorage` e nomes de trava citados entre crases (`tech-curse.tema`, `tech-curse.renovacao`) são contrato.
 
 ## Rastreabilidade com os testes
 
