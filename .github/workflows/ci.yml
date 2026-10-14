@@ -48,10 +48,36 @@ jobs:
         if: ${{ !cancelled() }}
         run: node scripts/rastreabilidade.mjs --estrito >> "$GITHUB_STEP_SUMMARY"
 
+  espelho:
+    name: espelho
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    continue-on-error: true
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Espelhar as imagens base no GHCR
+        run: scripts/imagens-base.sh espelhar
+
   e2e:
     name: e2e
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    needs: [espelho]
+    permissions:
+      contents: read
+      packages: read
     env:
       WEB_IMAGE: tech-curse-web:ci
     steps:
@@ -59,10 +85,26 @@ jobs:
 
       - uses: docker/setup-buildx-action@v4
 
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: imagens-base
+        name: Imagens base do espelho
+        run: |
+          {
+            echo "contextos<<FIM"
+            scripts/imagens-base.sh contextos
+            echo "FIM"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Build da imagem
         uses: docker/build-push-action@v7
         with:
           context: .
+          build-contexts: ${{ steps.imagens-base.outputs.contextos }}
           load: true
           tags: ${{ env.WEB_IMAGE }}
           cache-from: type=gha
@@ -138,10 +180,20 @@ jobs:
             type=sha,prefix=sha-,format=short,enable=${{ github.ref_type == 'branch' }}
             type=semver,pattern={{version}}
 
+      - id: imagens-base
+        name: Imagens base do espelho
+        run: |
+          {
+            echo "contextos<<FIM"
+            scripts/imagens-base.sh contextos
+            echo "FIM"
+          } >> "$GITHUB_OUTPUT"
+
       - id: publicacao
         uses: docker/build-push-action@v7
         with:
           context: .
+          build-contexts: ${{ steps.imagens-base.outputs.contextos }}
           push: true
           tags: ${{ steps.metadados.outputs.tags }}
           labels: ${{ steps.metadados.outputs.labels }}
