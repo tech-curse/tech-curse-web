@@ -7,7 +7,7 @@ RUN npm ci --no-audit --no-fund
 COPY . .
 RUN npx ng build --configuration production
 
-FROM public.ecr.aws/nginx/nginx-unprivileged:1.30.4-alpine3.24
+FROM public.ecr.aws/nginx/nginx-unprivileged:1.31.8-alpine3.24
 
 COPY nginx/default.conf.template /etc/nginx/templates/default.conf.template
 COPY nginx/seguranca.conf /etc/nginx/snippets/seguranca.conf
