@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/node:24.21.0-alpine3.24 AS build
+FROM public.ecr.aws/docker/library/node:26.13.0-alpine3.24 AS build
 WORKDIR /app
 
 COPY package.json package-lock.json ./
